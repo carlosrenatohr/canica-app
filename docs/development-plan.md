@@ -85,7 +85,7 @@ Handled before this plan was created. Repository access is local configuration, 
 
 ## M2 — Shared lint, test, and browser tooling
 
-**Status:** in-progress
+**Status:** verified
 
 ### Scope
 
