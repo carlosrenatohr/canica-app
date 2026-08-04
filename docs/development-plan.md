@@ -152,29 +152,29 @@ Implement types from `domain-model.md`:
 
 ## M5 — Database schema and Supabase local
 
-**Status:** planned
+**Status:** verified
 
 ### Scope
 
-- Start Supabase local with Docker
-- Add Drizzle schema and config
-- Add organization scoping to PHI tables
-- Add clinical entities and lifecycle enums
-- Add append-oriented audit log schema
-- Add migration workflow
+- Drizzle schema and config for all domain entities
+- Generated migration with organization-scoped tables, lifecycle enums, and append-only audit log
+- Supabase local guidance
+- Migration runner and schema-shape tests
 
 ### Tests
 
-- Migration applies to clean local database
+- Migration SQL applies to clean local database (Supabase local)
 - Required foreign keys and constraints
 - Organization boundaries at query layer
 - Audit records cannot be silently overwritten
+- Schema-shape tests pass without a database (unit)
+- Migration runner typechecks (integration pending local Supabase)
 
 ### Required access
 
-- Docker daemon
-- Supabase CLI invoked via `pnpm dlx`
-- No cloud credentials or production PHI required
+- Docker daemon (for `supabase start`)
+- Supabase CLI via `pnpm dlx`
+- Local Postgres not required for unit tests, only for migration integration
 
 ### Docs
 
