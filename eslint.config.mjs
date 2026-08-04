@@ -2,7 +2,15 @@ import eslint from "@eslint/js";
 
 export default [
   {
-    ignores: [".next/**", "dist/**", "coverage/**", "node_modules/**"]
+    ignores: [
+      ".next/**",
+      "dist/**",
+      "coverage/**",
+      "node_modules/**"
+    ]
   },
-  eslint.configs.recommended
+  {
+    files: ["**/*.{js,mjs,cjs,ts}"],
+    ...eslint.configs.recommended
+  }
 ];

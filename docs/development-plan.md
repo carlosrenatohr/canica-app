@@ -89,7 +89,7 @@ Handled before this plan was created. Repository access is local configuration, 
 
 ### Scope
 
-- ESLint flat config with TypeScript support
+- ESLint flat config compatible with the TypeScript 7 workspace surface
 - Workspace lint scripts
 - Shared Vitest configuration
 - Shared Playwright configuration
@@ -104,6 +104,8 @@ Handled before this plan was created. Repository access is local configuration, 
 - `pnpm e2e` executes Playwright and passes
 - `pnpm typecheck` remains green
 - Tests run without npm, npx, yarn, or global binaries
+
+TypeScript-specific ESLint parser rules remain deferred until the parser officially supports the selected TypeScript 7 release. Typecheck remains the typed-source gate.
 
 ### Commit
 
