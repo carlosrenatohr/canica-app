@@ -1,0 +1,7 @@
+{
+  "name": "@canica/eslint",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "files": ["index.mjs", "package.json"]
+}

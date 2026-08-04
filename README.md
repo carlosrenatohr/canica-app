@@ -10,7 +10,7 @@ canica helps physicians reduce administrative burden with intelligent automation
 
 ## Status
 
-**Pre-implementation.** Specifications are in place; application code is not scaffolded yet.
+**Bootstrap in progress.** Monorepo tooling is scaffolded; product modules are not implemented yet.
 
 See [`.specs/roadmap.md`](./.specs/roadmap.md) for product phases.
 
@@ -32,7 +32,7 @@ Initial focus: independent physicians and small clinics in **Nicaragua**, design
 | Layer | Choice |
 | --- | --- |
 | Language | **TypeScript 7+** |
-| Monorepo | pnpm + Turborepo |
+| Package manager | **pnpm 10+ only** + Turborepo |
 | Web | Next.js, React, Tailwind, shadcn/ui |
 | API | Hono on Cloudflare Workers + **GraphQL** |
 | Client access | `@canica/sdk` (typed GraphQL / codegen) |
@@ -109,7 +109,7 @@ canica/
 
 ## Getting started
 
-Application packages are not initialized yet.
+The monorepo scaffold is initialized. Product packages will be implemented milestone by milestone.
 
 When scaffolding lands, expected flow:
 
@@ -117,6 +117,8 @@ When scaffolding lands, expected flow:
 pnpm install
 pnpm dev
 ```
+
+`npm`, `npx`, and `yarn` are not used in this repository. Use `pnpm exec` for local binaries and `pnpm dlx` for temporary CLI tools.
 
 Exact scripts will be documented here after the monorepo bootstrap.
 

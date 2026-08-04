@@ -50,6 +50,17 @@ Optional when relevant:
 
 Do **not** treat `docs/**` as approved unless the task is to promote a draft into `.specs/`.
 
+### Command policy
+
+All automated jobs use pnpm only:
+
+- Install dependencies: `pnpm install`
+- Add dependencies: `pnpm add` / `pnpm add -D`
+- Run workspace binaries: `pnpm exec <binary>`
+- Run temporary CLIs: `pnpm dlx <package>`
+
+Agents must not invoke `npm`, `npx`, `yarn`, or create another lockfile.
+
 ---
 
 ## Natural language intake
