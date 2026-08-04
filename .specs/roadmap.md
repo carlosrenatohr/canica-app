@@ -137,11 +137,15 @@ When implementation begins, expected scaffolding order (still not tickets):
 1. Monorepo tooling (pnpm, turbo, shared tsconfig/eslint on **TypeScript 7+**)
 2. `packages/db` + Supabase
 3. `packages/auth` + auth HTTP callbacks on Hono
-4. GraphQL layer on `apps/api` (schema, context, authz) + codegen → `packages/sdk`
+4. **REST interim on `apps/api`** (Hono + repos) — GraphQL layer parked; see `docs/how-to/graphql-known-issue.md`; resuming GraphQL is tracked with M7
 5. `apps/web` shell + `packages/ui` wired to SDK
-6. Patients → consultations → audit (GraphQL types/mutations first in specs/domain)
+6. Patients → consultations → audit (types/mutations first in specs/domain)
 7. PDF export
 8. AI package + first documentation agent
+
+> Note: step 4 deviates from the original GraphQL-first plan because of the
+> dependency issue recorded in `docs/how-to/graphql-known-issue.md`. The
+> deviation is reversible and reviewed when M7 is un-parked.
 
 Automation (Hermes, scheduled NL jobs) may drive slices of this sequence only via the SDD envelope and [agent-automation.md](./agent-automation.md).
 

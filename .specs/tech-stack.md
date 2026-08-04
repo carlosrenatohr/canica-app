@@ -81,10 +81,14 @@ Testing commands run through pnpm (`pnpm test`, `pnpm exec playwright test`).
 
 ### API style (normative)
 
-- **GraphQL** is the application data API
-- **No** parallel public REST resource API for domain CRUD
+- **GraphQL is the target product API.** As of 2026-08 it is **temporarily parked**
+  (`packages/graphql` excluded from the workspace) due to the duplicate-`graphql`
+  module issue documented in `docs/how-to/graphql-known-issue.md`.
+- Until GraphQL returns, `apps/api` serves a **REST** surface on Hono for domain
+  CRUD (patients). This is a reversible interim, **not** a permanent parallel REST API.
+- **No** permanent parallel public REST resource API for domain CRUD.
 - Non-GraphQL HTTP only for: health, auth callbacks/webhooks, and binary upload/download when required
-- Frontend uses **`@canica/sdk` only** (no raw `fetch` to GraphQL from features)
+- Frontend uses **`@canica/sdk` only** (no raw `fetch` to the API from features)
 
 ---
 

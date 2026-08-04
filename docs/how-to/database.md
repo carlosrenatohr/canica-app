@@ -28,16 +28,39 @@ export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/canica"
 
 ## Supabase Cloud (existing project)
 
-Point the migration runner and future services at your Supabase project:
+### Where the env lives
+
+- Repository root `.env` — **gitignored**; this is the file you edit.
+- `.env.example` (committed) — template with placeholders; copy it as a starting point.
+- The migration runner (`packages/db` `db:migrate`) and the API
+  (`apps/api`, via `import "dotenv/config"`) both read `.env` from the repo root.
+- Do **not** create per-package `.env` files; keep everything in the root `.env`.
+
+### Getting the values from the Supabase Dashboard
+
+1. Open your project → **Project Settings → Database**.
+2. Under *Connection string* choose **Transaction pooler** (port `6543`).
+   It looks like:
+   `postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@aws-0-<REGION>.pooler.supabase.com:6543/postgres`
+3. Put that exact string in `.env` as `DATABASE_URL`.
+4. Copy `SUPABASE_URL` (`https://<PROJECT_REF>.supabase.co`) and
+   `SUPABASE_ANON_KEY` (Project Settings → API) if needed later.
+
+Minimal `.env` to run migrations + API:
 
 ```bash
-export DATABASE_URL="postgresql://postgres.<PROJECT_REF>:<PASSWORD>@db.<REGION>.supabase.co:5432/postgres"
-export SUPABASE_URL="https://<PROJECT_REF>.supabase.co"
-export SUPABASE_ANON_KEY="<PUBLIC_ANON_KEY>"
-export SUPABASE_SERVICE_ROLE_KEY="<SERVICE_ROLE_KEY>" # never commit
+DATABASE_URL="postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@aws-0-<REGION>.pooler.supabase.com:6543/postgres"
+ORG_ID="<uuid of a dev organization>"   # optional fallback org for the API
 ```
 
-Service role keys must never be committed. Add local secrets to `.env.local` (gitignored) and load via `dotenv/config` at the boundary only.
+Apply migrations and verify:
+
+```bash
+pnpm --filter @canica/db db:migrate
+pnpm --filter @canica/db test
+```
+
+Note: older direct host `db.<REGION>.supabase.co:5432` requires IPv4; prefer the pooler.
 
 ## Schema and migrations
 
