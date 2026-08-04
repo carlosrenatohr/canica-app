@@ -7,7 +7,9 @@
 >
 > **Status:** Approved (Initial Architecture)
 >
-> **Version:** 1.0
+> **Version:** 1.1
+>
+> **Note:** Approved living specs are under `.specs/`. This file is a working ADR draft; prefer `.specs/architecture.md`, `.specs/tech-stack.md`, `.specs/spec-driven-development.md`, and `.specs/agent-automation.md`.
 
 ---
 
@@ -156,6 +158,8 @@ packages/
     auth/
 
     db/
+
+    graphql/
 
     sdk/
 
@@ -621,37 +625,41 @@ No manual servers.
 
 # API Strategy
 
-REST API.
+GraphQL is the product API.
 
-No GraphQL.
+No parallel public REST domain API.
 
 Reasons
 
-- Simpler
-- Easier debugging
-- Better SDK generation
-- Medical domain already complex
+- Selective queries for clinical chart views
+- Single evolvable schema as contract
+- Strong codegen into TypeScript 7+ / SDK
+- Fits nested clinical domain without endpoint explosion
+
+Limited non-GraphQL HTTP only for health, auth callbacks, and binary upload/download when needed.
+
+Authoritative detail: `.specs/architecture.md` and `.specs/tech-stack.md`.
 
 ---
 
 # SDK
 
-The frontend never calls fetch directly.
+The frontend never calls fetch / raw GraphQL from feature code.
 
-Instead
+Instead use the typed GraphQL SDK (`@canica/sdk`):
 
 ```
-client.patients.create()
+client.patients.create({ input })
 
-client.consultations.update()
+client.consultations.update({ id, input })
 
-client.auth.login()
+client.query.patientById({ id })
 ```
 
 Benefits
 
 - Centralized API
-- Better typing
+- Better typing via codegen
 - Easier testing
 
 ---
@@ -686,9 +694,15 @@ Authentication utilities.
 
 ---
 
+## graphql
+
+Schema, resolvers, context (or under apps/api until split).
+
+---
+
 ## sdk
 
-API client.
+Typed GraphQL client (codegen).
 
 ---
 

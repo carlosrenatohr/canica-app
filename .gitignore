@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds / caches
+dist/
+build/
+out/
+.next/
+.turbo/
+.vercel/
+.wrangler/
+.cache/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+!.env*.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+
+# Cloudflare
+.wrangler/
+.dev.vars
+.mf/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Generated / local tooling
+*.local
+.eslintcache
+.stylelintcache
+
+# AI / agent local state (if any)
+.claude/
+.cursor/
+.opencode/
+.codebase-memory/
+
+# Misc
+*.pem
+*.key
+.secrets/

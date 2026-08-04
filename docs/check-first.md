@@ -22,7 +22,7 @@ Everything else is implementation.
 # Repository Structure
 
 ```text
-calnica/
+canica/
 
 .specs/
 
@@ -41,6 +41,10 @@ calnica/
     security-hipaa.md
 
     roadmap.md
+
+    spec-driven-development.md
+
+    agent-automation.md
 
 AGENTS.md
 
@@ -61,7 +65,7 @@ The repository README is intended for humans.
 
 It should answer:
 
-- What is Calnica?
+- What is canica?
 - Why does it exist?
 - Current project status
 - Technology stack
@@ -100,7 +104,9 @@ The recommended reading order is:
 6. .specs/domain-model.md
 7. .specs/security-hipaa.md
 8. .specs/roadmap.md
-9. AGENTS.md
+9. .specs/spec-driven-development.md
+10. .specs/agent-automation.md
+11. AGENTS.md
 
 
 ---
@@ -191,19 +197,45 @@ It should never define implementation details.
 
 ---
 
+## spec-driven-development.md
+
+Defines the Specification Driven Development methodology:
+
+- mandatory cycle (intent → spec → review → implement → verify)
+- which spec to edit
+- natural-language task envelope for humans and agents
+- quality bar and anti-patterns
+
+---
+
+## agent-automation.md
+
+Defines how orchestrators (e.g. Hermes) run scheduled or NL-driven work:
+
+- permission tiers
+- safety rails
+- job templates
+- reporting format
+
+---
+
 # Specification Driven Development
 
-Calnica follows a Specification Driven Development workflow.
+canica follows a Specification Driven Development workflow.
 
 Every significant feature should follow this order.
 
-1. Update specification.
-2. Review specification.
-3. Implement feature.
-4. Test.
-5. Update documentation if necessary.
+1. Capture intent (natural language OK).
+2. Update specification.
+3. Review specification.
+4. Implement feature.
+5. Test.
+6. Update documentation if necessary.
 
 The specification is the source of truth.
+
+Full detail: `.specs/spec-driven-development.md`.  
+Automation: `.specs/agent-automation.md`.
 
 ---
 
