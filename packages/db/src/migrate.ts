@@ -1,10 +1,14 @@
 // Lightweight migration runner using `pg` directly.
 // Reads every *.sql file in ./src/migrations and executes it against DATABASE_URL.
 // This avoids coupling to a vendor migrator package and runs locally without Docker.
-import "dotenv/config";
+import dotenv from "dotenv";
 import { Client } from "pg";
 import { readFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
 export async function migrate(url: string, dir: string): Promise<void> {
   const client = new Client({ connectionString: url });
@@ -32,7 +36,7 @@ export async function migrate(url: string, dir: string): Promise<void> {
 
 void migrate(
   process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:5432/canica",
-  new URL("../migrations", import.meta.url).pathname
+  new URL("./migrations", import.meta.url).pathname
 ).catch((error) => {
   console.error(error);
   process.exit(1);

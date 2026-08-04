@@ -3,20 +3,32 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./repos/patients": "./src/repos/patients.ts",
+    "./*": "./src/*"
+  },
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts",
     "lint": "eslint . --no-warn-ignored",
     "test": "vitest run --config ../../vitest.config.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@canica/types": "workspace:*",
+    "@canica/validation": "workspace:*",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "postgres": "^3.4.7"
   },
   "devDependencies": {
     "@types/pg": "^8.20.3",
     "drizzle-kit": "^0.31.10",
+    "pg-mem": "^3.0.14",
     "tsx": "^4.23.5"
   }
 }
