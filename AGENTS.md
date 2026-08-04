@@ -75,6 +75,7 @@ Prefer extending existing packages over creating new top-level apps.
 ## Coding conventions
 
 - TypeScript **7+** throughout
+- **pnpm only** — use `pnpm`, `pnpm exec`, or `pnpm dlx`; never use `npm`, `npx`, or `yarn`
 - Match existing style once code exists; until then, follow specs and keep modules small
 - GraphQL schema + codegen drive the SDK — do not hand-maintain divergent client types
 - Shared Zod schemas in `packages/validation` — do not fork schemas in app code
@@ -102,6 +103,7 @@ Prefer extending existing packages over creating new top-level apps.
 - When specs are silent, choose the simplest option consistent with vision principles and document it in `.specs/` if the decision is lasting
 - Do not commit unless the user explicitly asks (or the orchestrator job explicitly allows git write under its tier)
 - After substantive code changes, run the repo’s lint/typecheck/test commands when they exist
+- Record package-manager commands exactly; all installs and scripts run through pnpm
 - End automated runs with the report format in `agent-automation.md`
 
 ---

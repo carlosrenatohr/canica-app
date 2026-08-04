@@ -15,7 +15,7 @@ Process: [spec-driven-development.md](./spec-driven-development.md).
 | Technology | Version | Role | Why |
 | --- | --- | --- | --- |
 | Node.js | Latest Active LTS (rec: **24 LTS**) | Runtime | Stable LTS baseline |
-| pnpm | **10+** | Package manager | Fast installs, workspaces, efficient disk use |
+| pnpm | **10+** | Mandatory package manager | Fast installs, workspaces, efficient disk use |
 | Turborepo | **2+** | Monorepo task runner | Incremental builds, cache, parallel execution |
 | TypeScript | **7+** | Language (all packages) | End-to-end type safety; official language version for canica |
 
@@ -34,6 +34,13 @@ Process: [spec-driven-development.md](./spec-driven-development.md).
 | React Hook Form | latest compatible | Forms | Performance + DX |
 | Zod | latest compatible | Schema validation (shared) | Same schemas on client and server |
 | TanStack Query | **v5+** | Remote/server state | Caching, retries, async UX around the GraphQL client |
+
+### Package manager policy
+
+- **pnpm is mandatory for every repository operation**
+- Use `pnpm install`, `pnpm add`, `pnpm exec`, and `pnpm dlx`
+- Do not use `npm`, `npx`, `yarn`, or another package manager
+- Commit `pnpm-lock.yaml`; do not create `package-lock.json` or `yarn.lock`
 
 ### Local state
 
@@ -61,6 +68,16 @@ Process: [spec-driven-development.md](./spec-driven-development.md).
 | Sentry | latest compatible | Error tracking | Production diagnostics |
 | Resend | latest compatible | Transactional email | Simple API, good DX |
 | React PDF **or** PDF-Lib | latest compatible | PDF generation | Clinical exports / prescriptions |
+
+## Testing
+
+| Technology | Version | Role |
+| --- | --- | --- |
+| Vitest | latest compatible | Unit and integration tests |
+| Playwright Test | latest compatible | Browser end-to-end tests |
+| Playwright MCP | latest compatible | Agent-operated browser verification |
+
+Testing commands run through pnpm (`pnpm test`, `pnpm exec playwright test`).
 
 ### API style (normative)
 
@@ -98,6 +115,7 @@ All provider access goes through `packages/ai`. No direct provider coupling in b
 
 - Prefer the **latest stable** release that satisfies the floors above
 - **TypeScript 7+** is required policy for new code and tooling config (`packages/tsconfig`)
+- **pnpm 10+ is mandatory**; commands must never use npm, npx, or yarn
 - Pin exact versions in lockfile (`pnpm-lock.yaml`); this document defines policy floors and choices, not every patch pin
 - If a GraphQL library choice is refined at scaffold time (Yoga vs Pothos-first, etc.), update this file in the same change set
 
