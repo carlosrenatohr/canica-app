@@ -16,6 +16,7 @@ pnpm dev
 pnpm typecheck
 pnpm lint
 pnpm test
+pnpm e2e
 ```
 
 Do not use npm, npx, yarn, or another package manager. Use `pnpm exec` for installed binaries and `pnpm dlx` for temporary CLIs.
@@ -51,6 +52,10 @@ Each milestone must leave these checks documented and reproducible:
 - `pnpm lint`
 - `pnpm test`
 - `pnpm exec playwright test` when browser behavior exists
+
+The root `pnpm e2e` command runs the configured Playwright suite.
+
+TypeScript source is validated by `pnpm typecheck`. TypeScript-specific ESLint parser rules are deferred until the parser supports the selected TypeScript 7 release.
 
 ## Current state
 

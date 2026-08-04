@@ -2,7 +2,11 @@ import eslint from "@eslint/js";
 
 export default [
   {
-    ignores: [".next/**", "dist/**", "coverage/**", "node_modules/**"]
+    ignores: ["**/*.ts", "**/*.tsx", ".next/**", "dist/**", "coverage/**", "node_modules/**"],
   },
-  eslint.configs.recommended
+  {
+    // Lint JavaScript/MJS only. TypeScript files are validated by tsc/typecheck.
+    files: ["**/*.{js,mjs,cjs}"],
+    ...eslint.configs.recommended,
+  },
 ];

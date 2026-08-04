@@ -7,6 +7,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "lint": "eslint . --no-warn-ignored",
+    "test": "vitest run --config ../../vitest.config.mjs",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "zod-validation-error": "^5.0.0"
   }
 }

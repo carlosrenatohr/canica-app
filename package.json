@@ -2,6 +2,7 @@
   "name": "canica",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "packageManager": "pnpm@11.15.1",
   "engines": {
     "node": ">=24",
@@ -11,9 +12,10 @@
     "build": "turbo run build",
     "codegen": "turbo run codegen",
     "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "e2e": "playwright test",
+    "lint": "turbo run lint --concurrency=4",
+    "test": "turbo run test --concurrency=4",
+    "typecheck": "turbo run typecheck --concurrency=4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
