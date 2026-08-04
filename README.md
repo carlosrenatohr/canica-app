@@ -75,6 +75,8 @@ Details and the task envelope used by humans and agents: [`.specs/spec-driven-de
 | [`.specs/spec-driven-development.md`](./.specs/spec-driven-development.md) | SDD methodology |
 | [`.specs/agent-automation.md`](./.specs/agent-automation.md) | Hermes / NL automation |
 | [`AGENTS.md`](./AGENTS.md) | Coding-agent operating rules |
+| [`docs/development-plan.md`](./docs/development-plan.md) | Granular execution plan |
+| [`docs/progress.md`](./docs/progress.md) | Live milestone status |
 
 Working drafts may live under [`docs/`](./docs/). **Source of truth is `.specs/`.**
 
