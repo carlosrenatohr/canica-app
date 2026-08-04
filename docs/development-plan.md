@@ -148,27 +148,7 @@ Implement types from `domain-model.md`:
 
 ## M4 — Shared validation
 
-**Status:** planned
-
-### Scope
-
-Add Zod schemas for first domain inputs and outputs. Keep validation shared between GraphQL boundary, API services, and web forms.
-
-### Tests
-
-- Valid patient data
-- Invalid required fields
-- Date and enum constraints
-- Consultation draft versus finalized rules
-- Prescription input boundaries
-
-### Docs
-
-`docs/how-to/validation.md`
-
-### Commit
-
-`feat(validation): add shared clinical input schemas`
+**Status:** verified
 
 ## M5 — Database schema and Supabase local
 

@@ -17,7 +17,7 @@ Status is updated after each verified milestone.
 | M1 | pnpm/Turborepo monorepo scaffold, TypeScript 7+ | verified | `pnpm typecheck` passes; commit `1d697aa` |
 | M2 | Shared lint/test/Playwright tooling | verified | `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm e2e` pass |
 | M3 | `packages/types` domain types | planned | Vitest + typecheck |
-| M4 | `packages/validation` Zod schemas | planned | Vitest valid/invalid cases |
+| M4 | `packages/validation` Zod schemas | verified | Vitest 17/17 passing; typecheck/lint green |
 | M5 | Drizzle schema, migrations, Supabase local | planned | DB integration tests |
 | M6 | Typed repositories and seed | planned | DB integration tests + org isolation |
 | M7 | GraphQL schema, context, codegen, SDK | planned | schema tests + generated client checks |
