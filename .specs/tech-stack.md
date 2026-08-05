@@ -1,7 +1,8 @@
 # Tech Stack
 
 > **Status:** Approved  
-> **Version:** 1.1
+> **Version:** 1.2  
+> **Changes (1.2):** RBAC row (permission-based, own), Provider abstraction & BAA readiness section
 
 This is the **only** document that defines canica’s official technology stack and approved version floors.
 
@@ -42,6 +43,15 @@ Process: [spec-driven-development.md](./spec-driven-development.md).
 - Do not use `npm`, `npx`, `yarn`, or another package manager
 - Commit `pnpm-lock.yaml`; do not create `package-lock.json` or `yarn.lock`
 
+### Provider abstraction & BAA readiness
+
+Any vendor that touches PHI (database, object storage, email, AI) is reached
+through an abstraction package (`packages/ai`, `packages/email`,
+`packages/storage`, …) so that switching a vendor is a configuration decision,
+not a rewrite. BAA availability may force a swap at any time — see
+`security-hipaa.md` → Vendor & BAA readiness. Abstraction packages are created
+when their first real use appears; the principle is normative from day one.
+
 ### Local state
 
 - Prefer React state
@@ -62,6 +72,7 @@ Process: [spec-driven-development.md](./spec-driven-development.md).
 | Drizzle ORM | **0.44+** | ORM | SQL-first, type-safe, lightweight migrations |
 | Supabase PostgreSQL | managed | Primary database | Managed Postgres, backups, dashboard, strong free tier, easy local dev |
 | Better Auth | latest compatible | Authentication | Provider-agnostic, modern, type-safe, self-hostable |
+| RBAC (own) | — | Authorization | Permission-based; role→permission matrix in DB (`role_permissions`) |
 | Supabase Storage | managed | Object storage | PDFs, medical images, attachments |
 | Zod | latest compatible | Input validation at boundaries | Shared via `packages/validation`; complements GraphQL args |
 | Pino | latest compatible | Logging | Structured, fast |
