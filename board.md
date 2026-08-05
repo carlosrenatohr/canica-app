@@ -56,6 +56,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | W3 | Gate estandarizado de verificación tipo hit (`pnpm check` como único gate: typecheck + lint + test + e2e) + `skills-lock.json` (skills pinned con hash) | `~/Codee/hit/skills-lock.json` · AGENTS.md hit (gate) | — | 📋 Backlog | — |
 | W4 | Integrar Dredd con board/state de canica (`dredd board`/`status`/`metrics`) y definir el flujo standard completo (spec → task → review → merge) | `~/Codee/hit/.dredd/README.md` | — | 📋 Backlog | — |
 | W5 | Asegurar Cloudflare MCP + codebase-memory MCP instalados y usados de forma canónica (codebase-memory por encima de grep/glob del agente). Cloudflare MCP hoy NO está en `opencode.json` (solo hay skills); documentar y habilitar | `~/.config/opencode/opencode.json` · `AGENTS.md` (MCP tooling) | — | 📋 Backlog | — |
+| W6 | Indexar canica-app en codebase-memory (`index_repository`) para que código + `.specs/` sean consultables vía grafo; evaluar definir `.specs/` como fuente de verdad consultable | `index_repository` · `AGENTS.md` (MCP tooling) | — | 📋 Backlog | — |
 
 ## Design & Growth
 
