@@ -73,6 +73,16 @@ export async function listConsultations(
     );
 }
 
+export async function listConsultationsByOrg(
+  db: Db,
+  organizationId: string
+): Promise<ConsultationRow[]> {
+  return db
+    .select()
+    .from(schema.consultations)
+    .where(eq(schema.consultations.organizationId, organizationId));
+}
+
 export async function getConsultation(
   db: Db,
   organizationId: string,

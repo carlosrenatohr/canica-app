@@ -8,8 +8,15 @@ import { Hono } from "hono";
 import { createDb } from "@canica/db";
 import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
+import * as consultationsRepo from "@canica/db/repos/consultations";
 import { writeAudit } from "@canica/db/repos/audit";
 import { CreatePatientInput, UpdatePatientInput } from "@canica/validation";
+import {
+  CreateConsultationInput,
+  FinalizeConsultationInput,
+  CreateDiagnosisInput,
+  CreatePrescriptionInput,
+} from "@canica/validation";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
 const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
@@ -98,6 +105,137 @@ app.delete("/patients/:id", requirePermission(Permission.PATIENT_ARCHIVE), async
     userAgent: c.req.header("user-agent"),
   });
   return c.body(null, 204);
+});
+
+app.use("/consultations/*", sessionMiddleware());
+
+app.get("/consultations", requirePermission(Permission.CONSULTATION_READ), async (c) => {
+  const patientId = c.req.query("patientId");
+  const organizationId = c.var.actor.organizationId;
+  let consultations;
+  if (patientId) {
+    consultations = await consultationsRepo.listConsultations(c.var.db, organizationId, patientId);
+  } else {
+    consultations = await consultationsRepo.listConsultationsByOrg(c.var.db, organizationId);
+  }
+  return c.json({ data: consultations });
+});
+
+app.get("/consultations/:id", requirePermission(Permission.CONSULTATION_READ), async (c) => {
+  const consultation = await consultationsRepo.getConsultation(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id")
+  );
+  if (!consultation) return c.json({ error: "not_found" }, 404);
+  return c.json({ data: consultation });
+});
+
+app.post("/consultations", requirePermission(Permission.CONSULTATION_WRITE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = CreateConsultationInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const medicalRecordId = await consultationsRepo.getOrCreateMedicalRecord(
+    c.var.db,
+    c.var.actor.organizationId,
+    parsed.data.patientId
+  );
+  const consultation = await consultationsRepo.createConsultation(c.var.db, c.var.actor.organizationId, {
+    ...parsed.data,
+    medicalRecordId,
+    physicianId: c.var.actor.userId,
+  });
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "consultation.create",
+    targetEntity: "consultation",
+    targetId: consultation.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: consultation }, 201);
+});
+
+app.patch("/consultations/:id/finalize", requirePermission(Permission.CONSULTATION_FINALIZE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = FinalizeConsultationInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const consultation = await consultationsRepo.finalizeConsultation(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id"),
+    parsed.data
+  );
+  if (!consultation) return c.json({ error: "not_found" }, 404);
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "consultation.finalize",
+    targetEntity: "consultation",
+    targetId: consultation.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: consultation });
+});
+
+app.get("/consultations/:id/diagnoses", requirePermission(Permission.DIAGNOSIS_READ), async (c) => {
+  const diagnoses = await consultationsRepo.listDiagnoses(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id")
+  );
+  return c.json({ data: diagnoses });
+});
+
+app.post("/consultations/:id/diagnoses", requirePermission(Permission.DIAGNOSIS_WRITE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = CreateDiagnosisInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const diagnosis = await consultationsRepo.createDiagnosis(c.var.db, c.var.actor.organizationId, {
+    ...parsed.data,
+    consultationId: c.req.param("id"),
+  });
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "diagnosis.create",
+    targetEntity: "diagnosis",
+    targetId: diagnosis.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: diagnosis }, 201);
+});
+
+app.get("/consultations/:id/prescriptions", requirePermission(Permission.PRESCRIPTION_READ), async (c) => {
+  const prescriptions = await consultationsRepo.listPrescriptions(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id")
+  );
+  return c.json({ data: prescriptions });
+});
+
+app.post("/consultations/:id/prescriptions", requirePermission(Permission.PRESCRIPTION_WRITE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = CreatePrescriptionInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const prescription = await consultationsRepo.createPrescription(c.var.db, c.var.actor.organizationId, {
+    ...parsed.data,
+    consultationId: c.req.param("id"),
+  });
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "prescription.create",
+    targetEntity: "prescription",
+    targetId: prescription.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: prescription }, 201);
 });
 
 export default app;
