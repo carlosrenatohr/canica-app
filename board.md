@@ -43,6 +43,19 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 12 | M17 AI package (stub provider, agents, accept/edit/reject) | `.specs/roadmap.md` (Phase 2) | — | ⏸️ Blocked (decisión: pausado) | — |
 | 13 | M7 GraphQL: análisis decidir seguir o dejar REST (unpark vs permanente) | `docs/how-to/graphql-known-issue.md` | — | 📋 Backlog (research) | — |
 
+## Workflow & Standards
+
+> Objetivo: replicar el standard de trabajo de `~/Codee/hit` en canica-app — Dredd (multi-agent
+> review), AGENTS.md canónico y consolidado, gate de verificación único y skills pinneados — para
+> que la forma de trabajar sea uniforme entre workspaces.
+
+| # | Task | Spec / Referencia | Branch | Status | PR |
+|---|---|---|---|---|---|
+| W1 | Portar Dredd de hit a canica: wrapper `dredd` + `.dredd/` (review.sh, config, automated-runner.sh, metrics.sh, state.md) — `review`/`security`/`full` funcional como standard de review | `~/Codee/hit/dredd` · `~/Codee/hit/.dredd/` | — | 📋 Backlog | — |
+| W2 | Consolidar `AGENTS.md` estilo hit: canónico, tool-neutral (consolida CLAUDE/ONBOARDING/README/docs) + `AGENTS_AUDIT.md` (histórico de consolidación) + `ONBOARDING.md` (handoff de sesión) | `~/Codee/hit/AGENTS.md` · `AGENTS_AUDIT.md` · `ONBOARDING.md` | — | 📋 Backlog | — |
+| W3 | Gate estandarizado de verificación tipo hit (`pnpm check` como único gate: typecheck + lint + test + e2e) + `skills-lock.json` (skills pinned con hash) | `~/Codee/hit/skills-lock.json` · AGENTS.md hit (gate) | — | 📋 Backlog | — |
+| W4 | Integrar Dredd con board/state de canica (`dredd board`/`status`/`metrics`) y definir el flujo standard completo (spec → task → review → merge) | `~/Codee/hit/.dredd/README.md` | — | 📋 Backlog | — |
+
 ## Design & Growth
 
 | # | Task | Spec | Branch | Status | PR |
@@ -76,3 +89,5 @@ board es el plan de trabajo (incluye investigación y no-código).
   org `00000000-0000-0000-0000-000000000000`).
 - **Documentación de hoy**: `docs/progress.md`, `docs/development-plan.md`, `docs/backlog.md`,
   `README.md` actualizados con M12–M16 y gaps; commit `8d3b8fb`.
+- **Workflow & Standards (sección nueva)**: replicar Dredd + AGENTS.md consolidado + gate de
+  verificación + skills-lock desde `~/Codee/hit` (W1–W4) como standard de trabajo uniforme.
