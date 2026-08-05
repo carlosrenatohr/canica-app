@@ -1,7 +1,8 @@
 # Domain Model
 
 > **Status:** Approved (initial)  
-> **Version:** 1.0
+> **Version:** 1.1  
+> **Changes (1.1):** permission-based RBAC model under User
 
 Core business entities for canica. This document defines **what** exists and how entities relate — not table DDL or API paths.
 
@@ -66,6 +67,14 @@ A person who authenticates into canica.
 - Clinic Owner
 - Specialist
 - Assistant
+
+**RBAC (permission-based)**
+
+- A user carries exactly one role (`users.role`).
+- The role → permission matrix lives in the database (`role_permissions`, seeded).
+- Business logic asks `hasPermission(actor, Permission.X)`, never hard-coded
+  role comparisons. Adding a role (Specialist, Resident, Intern, …) is a data
+  change only.
 
 **Notes**
 

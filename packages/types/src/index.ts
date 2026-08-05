@@ -1,21 +1,16 @@
 // Canonical domain types derived from .specs/domain-model.md
 // Import these everywhere instead of redefining shapes.
-
 export type UUID = string;
 export type ISODate = string;
 export type ISOTime = string;
 
-// Tenant boundary for data access and AI consent policies.
-export interface Organization {
-  id: UUID;
-  name: string;
-  createdAt: ISODate;
-  updatedAt: ISODate;
-  // Future: branding, AI consent policy, locale.
-}
-
-// Authenticated actor. Permissions are role-based within an organization.
-export type UserRole = "doctor" | "receptionist" | "administrator" | "clinic-owner" | "specialist" | "assistant";
+export type UserRole =
+  | "doctor"
+  | "receptionist"
+  | "administrator"
+  | "clinic-owner"
+  | "specialist"
+  | "assistant";
 
 export interface User {
   id: UUID;
@@ -25,16 +20,20 @@ export interface User {
   role: UserRole;
   createdAt: ISODate;
   updatedAt: ISODate;
-  // Future: MFA, passwordless, SSO preferences.
 }
 
-// A person receiving care. PHI-bearing.
+export interface Organization {
+  id: UUID;
+  name: string;
+  createdAt: ISODate;
+  updatedAt: ISODate;
+}
+
 export interface Patient {
   id: UUID;
   organizationId: UUID;
   firstName: string;
   lastName: string;
-  // Local-practice identifier (e.g. national ID) only when collected.
   identifier?: string;
   birthDate?: ISODate;
   sex?: "male" | "female" | "other" | "unspecified";
@@ -46,7 +45,6 @@ export interface Patient {
   updatedAt: ISODate;
 }
 
-// Longitudinal chart for a patient within an organization.
 export interface MedicalRecord {
   id: UUID;
   patientId: UUID;
@@ -57,7 +55,6 @@ export interface MedicalRecord {
 
 export type ConsultationStatus = "draft" | "finalized" | "amended";
 
-// Clinical encounter between a physician and a patient.
 export interface Consultation {
   id: UUID;
   medicalRecordId: UUID;
@@ -76,7 +73,6 @@ export interface Consultation {
   updatedAt: ISODate;
 }
 
-// A clinical assessment tied to a consultation.
 export type DiagnosisStatus = "active" | "resolved" | "ruled-out";
 
 export interface Diagnosis {
@@ -92,9 +88,7 @@ export interface Diagnosis {
   updatedAt: ISODate;
 }
 
-// Medication or therapeutic order issued from a consultation.
 export type PrescriptionStatus = "active" | "cancelled" | "completed";
-
 export type PrescriptionRoute = "oral" | "iv" | "subcutaneous" | "topical" | "inhalation" | "other";
 
 export interface Prescription {
@@ -114,8 +108,13 @@ export interface Prescription {
   updatedAt: ISODate;
 }
 
-// A scheduled interaction with a patient.
-export type AppointmentStatus = "scheduled" | "confirmed" | "checked-in" | "completed" | "cancelled" | "no-show";
+export type AppointmentStatus =
+  | "scheduled"
+  | "confirmed"
+  | "checked-in"
+  | "completed"
+  | "cancelled"
+  | "no-show";
 
 export interface Appointment {
   id: UUID;
@@ -132,7 +131,6 @@ export interface Appointment {
   updatedAt: ISODate;
 }
 
-// A file related to a patient or consultation. PHI-bearing.
 export type AttachmentStorage = "supabase";
 
 export interface Attachment {
@@ -148,8 +146,12 @@ export interface Attachment {
   createdAt: ISODate;
 }
 
-// An AI-generated proposal not yet clinical truth.
-export type AiSuggestionType = "history-draft" | "summary" | "prescription-draft" | "trend-insight" | "coding-suggestion";
+export type AiSuggestionType =
+  | "history-draft"
+  | "summary"
+  | "prescription-draft"
+  | "trend-insight"
+  | "coding-suggestion";
 export type AiSuggestionStatus = "proposed" | "accepted" | "rejected" | "edited";
 
 export interface AiSuggestion {
@@ -160,14 +162,13 @@ export interface AiSuggestion {
   type: AiSuggestionType;
   status: AiSuggestionStatus;
   prompt: string;
-  output: string;
+  output: unknown;
   provider: string;
   reviewedBy?: UUID;
   reviewedAt?: ISODate;
   createdAt: ISODate;
 }
 
-// Immutable record of security- and clinically-relevant actions.
 export type AuditAction =
   | "login"
   | "login-failed"
@@ -196,7 +197,6 @@ export interface AuditLog {
   createdAt: ISODate;
 }
 
-// A generated artifact (e.g. consultation summary, prescription PDF).
 export interface DocumentExport {
   id: UUID;
   organizationId: UUID;

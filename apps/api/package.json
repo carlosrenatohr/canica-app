@@ -4,8 +4,17 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
     "lint": "eslint . --no-warn-ignored",
     "test": "vitest run --config ../../vitest.config.mjs",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@canica/auth": "workspace:*",
+    "@canica/db": "workspace:*",
+    "@canica/validation": "workspace:*",
+    "@hono/node-server": "^2.0.12",
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.34"
   }
 }

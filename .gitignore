@@ -71,3 +71,7 @@ supabase/.temp
 *.pem
 *.key
 .secrets/
+
+# Agent tooling local state
+.agents/
+skills-lock.json

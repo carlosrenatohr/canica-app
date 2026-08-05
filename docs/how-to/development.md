@@ -44,6 +44,24 @@ pnpm dlx supabase stop
 
 Do not use production PHI in local development.
 
+## Supabase Cloud credentials
+
+Edit the **repo-root `.env`** (gitignored; template in `.env.example`):
+
+```bash
+DATABASE_URL="postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@aws-0-<REGION>.pooler.supabase.com:6543/postgres"
+SUPABASE_URL="https://<PROJECT_REF>.supabase.co"
+SUPABASE_ANON_KEY="<PUBLIC_ANON_KEY>"
+ORG_ID="<uuid>"
+```
+
+Full steps in [`how-to/database.md`](./database.md). Never commit `.env`.
+
+## GraphQL layer note
+
+GraphQL is temporarily parked; `apps/api` serves REST meanwhile.
+See [`how-to/graphql-known-issue.md`](./graphql-known-issue.md).
+
 ## Verification policy
 
 Each milestone must leave these checks documented and reproducible:

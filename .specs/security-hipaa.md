@@ -1,7 +1,8 @@
 # Security & HIPAA-Inspired Practices
 
 > **Status:** Approved (principles)  
-> **Version:** 1.0
+> **Version:** 1.1  
+> **Changes (1.1):** permission-based RBAC (role→permission matrix in DB), Vendor & BAA readiness section
 
 Although the first market is **Nicaragua**, canica is designed following HIPAA-inspired principles from day one.
 
@@ -119,7 +120,21 @@ Never log raw passwords or full session secrets.
 
 ## Authorization
 
-### Initial roles
+### Model: permission-based RBAC
+
+Authorization asks **“does this user’s role grant permission X?”** — never
+hard-coded role comparisons (`role === "doctor"`). Roles are the assignable unit
+on a user; permissions derive from the role via a matrix. Adding a future role
+(Specialist, Resident, Intern, …) is a data change, not an application rewrite.
+
+- A user carries exactly one role (`users.role`).
+- The role → permission matrix lives in the database (`role_permissions`,
+  seeded). Granting, revoking, or adding a role only changes seed/data.
+- Application code calls `hasPermission(actor, Permission.PATIENT_READ)` and
+  similar; business logic never checks roles directly.
+- Deny by default: no matching grant row = denied.
+
+### Initial roles (assignable to users)
 
 | Role | Intent |
 | --- | --- |
@@ -132,6 +147,25 @@ Never log raw passwords or full session secrets.
 - Clinic Owner
 - Specialist
 - Assistant
+- Resident / Intern (may map to existing permission sets; no code change required)
+
+### Initial permission catalog (non-exhaustive)
+
+| Permission | Meaning |
+| --- | --- |
+| `patient:read` / `patient:write` / `patient:archive` | Patient demographics lifecycle |
+| `consultation:read` / `consultation:write` / `consultation:finalize` | Consultations |
+| `diagnosis:read` / `diagnosis:write` | Diagnoses |
+| `prescription:read` / `prescription:write` | Prescriptions |
+| `appointment:read` / `appointment:write` | Appointments |
+| `attachment:read` / `attachment:write` | Attachments |
+| `user:manage` | Invite / configure users (Administrator) |
+| `audit:read` | Read audit logs (Administrator) |
+| `org:manage` | Org configuration (Administrator) |
+
+The exact matrix (which role grants which permission) is seed data in
+`packages/db`. New permissions are added to the catalog + seed, never by editing
+checks throughout the app.
 
 ### Rules
 
@@ -139,6 +173,7 @@ Never log raw passwords or full session secrets.
 - Enforce authorization in the **API** (never only in the UI)
 - Scope all PHI by organization
 - Prefer explicit checks near data access (`packages/db` / API middleware), not scattered ad-hoc logic
+- Business logic uses `hasPermission`, not direct role comparisons
 
 ---
 
@@ -188,6 +223,23 @@ Never log raw passwords or full session secrets.
 - Document which providers receive what categories of data
 - Prefer minimization and de-identification where the feature still works
 - Provider changes must not bypass security review
+
+---
+
+## Vendor & BAA readiness
+
+PHI rests in or transits through third-party vendors (database, object storage,
+email, AI). Not every “modern” provider signs a Business Associate Agreement
+(BAA) where the target market requires one. A technically excellent architecture
+is worthless if a required vendor cannot sign a BAA.
+
+- Access any PHI-touching provider **only** through an abstraction package
+  (`packages/ai`, `packages/email`, `packages/storage`, …). Swapping a vendor is a
+  configuration decision, not a rewrite.
+- When a vendor is onboarded, record BAA availability in `docs/how-to/*`.
+- If a BAA is required and the vendor cannot provide one, the vendor must be
+  replaced — provider SDKs stay inside their abstraction package so this is cheap.
+- Provider-specific SDKs never leak into domain/business modules.
 
 ---
 

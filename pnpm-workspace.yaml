@@ -1,8 +1,14 @@
 packages:
   - apps/*
   - packages/*
+  - '!packages/graphql'
 allowBuilds:
+  '@apollo/protobufjs': true
+  core-js-pure: true
   esbuild: true
+overrides:
+  graphql: 16.14.2
+  graphql@17: 16.14.2
 minimumReleaseAgeExclude:
   - '@typescript-eslint/eslint-plugin@8.66.0'
   - '@typescript-eslint/parser@8.66.0'
@@ -14,4 +20,4 @@ minimumReleaseAgeExclude:
   - '@typescript-eslint/typescript-estree@8.66.0'
   - '@typescript-eslint/utils@8.66.0'
   - '@typescript-eslint/visitor-keys@8.66.0'
-  - typescript-eslint@8.66.0
+  - 'typescript-eslint@8.66.0'

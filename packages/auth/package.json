@@ -3,9 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "lint": "eslint . --no-warn-ignored",
     "test": "vitest run --config ../../vitest.config.mjs",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@canica/db": "workspace:*",
+    "better-auth": "^1.6.25",
+    "drizzle-orm": "^0.45.2"
   }
 }
