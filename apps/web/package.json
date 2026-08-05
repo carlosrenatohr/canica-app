@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint . --no-warn-ignored",
     "test": "vitest run --config ../../vitest.config.mjs",
+    "e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "playwright": "^1.62.1",
     "typescript": "^7.0.0"
   }
 }
