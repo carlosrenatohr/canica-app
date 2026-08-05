@@ -9,6 +9,7 @@ import { createDb } from "@canica/db";
 import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
 import * as consultationsRepo from "@canica/db/repos/consultations";
+import * as medicalRecordsRepo from "@canica/db/repos/medical-records";
 import { writeAudit } from "@canica/db/repos/audit";
 import {
   CreatePatientInput,
@@ -237,6 +238,19 @@ app.post("/consultations/:id/prescriptions", requirePermission(Permission.PRESCR
     userAgent: c.req.header("user-agent"),
   });
   return c.json({ data: prescription }, 201);
+});
+
+app.get("/patients/:id/timeline", requirePermission(Permission.PATIENT_READ), async (c) => {
+  const entries = await medicalRecordsRepo.getPatientTimeline(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id"),
+    {
+      fromDate: c.req.query("fromDate") ?? undefined,
+      toDate: c.req.query("toDate") ?? undefined,
+    }
+  );
+  return c.json({ data: entries });
 });
 
 export default app;
