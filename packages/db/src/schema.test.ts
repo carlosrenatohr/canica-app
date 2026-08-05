@@ -6,6 +6,7 @@ describe("schema exports", () => {
   it("exposes all domain tables", () => {
     expect(Object.keys(schema).sort()).toEqual(
       [
+        "accounts",
         "aiSuggestions",
         "aiSuggestionStatus",
         "aiSuggestionType",
@@ -22,10 +23,14 @@ describe("schema exports", () => {
         "organizationRole",
         "organizations",
         "patients",
+        "permissionKey",
         "prescriptionRoute",
         "prescriptionStatus",
         "prescriptions",
+        "rolePermissions",
+        "sessions",
         "users",
+        "verifications",
       ].sort()
     );
   });

@@ -62,8 +62,32 @@ async function seed() {
     `;
   }
 
+  // Role → permission matrix (permission-based RBAC)
+  const matrix: Record<string, string[]> = {
+    doctor: [
+      "patient:read", "patient:write", "patient:archive",
+      "consultation:read", "consultation:write", "consultation:finalize",
+      "diagnosis:read", "diagnosis:write",
+      "prescription:read", "prescription:write",
+      "appointment:read", "appointment:write",
+      "attachment:read", "attachment:write",
+    ],
+    receptionist: ["patient:read", "appointment:read", "appointment:write"],
+    administrator: ["user:manage", "audit:read", "org:manage"],
+  };
+
+  for (const [role, permissions] of Object.entries(matrix)) {
+    for (const permission of permissions) {
+      await sql`
+        INSERT INTO role_permissions (role, permission)
+        VALUES (${role}::organization_role, ${permission}::permission_key)
+        ON CONFLICT (role, permission) DO NOTHING
+      `;
+    }
+  }
+
   await sql.end();
-  console.log("Seed complete: 1 org, 1 user, 3 patients");
+  console.log(`Seed complete: 1 org, 1 user, 3 patients, ${Object.values(matrix).reduce((a, p) => a + p.length, 0)} role_permissions`);
 }
 
 seed().catch((e) => {

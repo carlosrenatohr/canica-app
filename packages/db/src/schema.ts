@@ -1,7 +1,7 @@
 // Drizzle schema derived from .specs/domain-model.md
 // All PHI-bearing tables are organization-scoped via organization_id.
 // Audit is append-oriented: rows are never soft-updated to hide history.
-import { bigint, boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const organizationRole = pgEnum("organization_role", ["doctor", "receptionist", "administrator", "clinic-owner", "specialist", "assistant"]);
 export const consultationStatus = pgEnum("consultation_status", ["draft", "finalized", "amended"]);
@@ -11,6 +11,37 @@ export const prescriptionRoute = pgEnum("prescription_route", ["oral", "iv", "su
 export const appointmentStatus = pgEnum("appointment_status", ["scheduled", "confirmed", "checked-in", "completed", "cancelled", "no-show"]);
 export const aiSuggestionType = pgEnum("ai_suggestion_type", ["history-draft", "summary", "prescription-draft", "trend-insight", "coding-suggestion"]);
 export const aiSuggestionStatus = pgEnum("ai_suggestion_status", ["proposed", "accepted", "rejected", "edited"]);
+
+export const permissionKey = pgEnum("permission_key", [
+  "patient:read",
+  "patient:write",
+  "patient:archive",
+  "consultation:read",
+  "consultation:write",
+  "consultation:finalize",
+  "diagnosis:read",
+  "diagnosis:write",
+  "prescription:read",
+  "prescription:write",
+  "appointment:read",
+  "appointment:write",
+  "attachment:read",
+  "attachment:write",
+  "user:manage",
+  "audit:read",
+  "org:manage",
+]);
+
+export const rolePermissions = pgTable(
+  "role_permissions",
+  {
+    role: organizationRole("role").notNull(),
+    permission: permissionKey("permission").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.role, t.permission] }),
+  }),
+);
 
 const createdAt = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
 const updatedAt = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
@@ -26,8 +57,48 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
   email: varchar("email", { length: 320 }).notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
   name: varchar("name", { length: 256 }).notNull(),
+  image: varchar("image", { length: 1024 }),
   role: organizationRole("role").notNull().default("doctor"),
+  createdAt,
+  updatedAt,
+});
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  token: varchar("token", { length: 512 }).notNull().unique(),
+  ipAddress: varchar("ip_address", { length: 64 }),
+  userAgent: text("user_agent"),
+  createdAt,
+  updatedAt,
+});
+
+export const accounts = pgTable("accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  providerId: varchar("provider_id", { length: 128 }).notNull(),
+  accountId: varchar("account_id", { length: 512 }).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt,
+  updatedAt,
+}, (t) => ({
+  userIdIdx: index("accounts_user_id_idx").on(t.userId),
+}));
+
+export const verifications = pgTable("verifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  identifier: varchar("identifier", { length: 512 }).notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt,
   updatedAt,
 });
