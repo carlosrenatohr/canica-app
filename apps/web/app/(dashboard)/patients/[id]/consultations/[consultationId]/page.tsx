@@ -109,6 +109,30 @@ export default function ConsultationDetailPage({
           }`}>
             {statusLabel}
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const res = await fetch(`/api/consultations/${params.consultationId}/export/pdf`, {
+                headers: { Accept: "application/pdf" },
+              });
+              if (!res.ok) {
+                alert("Error generando PDF");
+                return;
+              }
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `consulta-${params.consultationId}.pdf`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            }}
+          >
+            Descargar PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={() => router.push(`/patients/${params.id}/consultations`)}>
             Volver
           </Button>

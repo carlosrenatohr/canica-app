@@ -5,12 +5,14 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
 import { Hono } from "hono";
-import { createDb } from "@canica/db";
+import { eq } from "drizzle-orm";
+import { createDb, patients } from "@canica/db";
 import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
 import * as consultationsRepo from "@canica/db/repos/consultations";
 import * as medicalRecordsRepo from "@canica/db/repos/medical-records";
 import * as appointmentsRepo from "@canica/db/repos/appointments";
+import * as documentExportsRepo from "@canica/db/repos/document-exports";
 import { writeAudit } from "@canica/db/repos/audit";
 import {
   CreatePatientInput,
@@ -22,6 +24,7 @@ import {
   CreateAppointmentInput,
   UpdateAppointmentStatusInput,
 } from "@canica/validation";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
 const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
@@ -327,6 +330,80 @@ app.patch("/appointments/:id/status", requirePermission(Permission.APPOINTMENT_W
     userAgent: c.req.header("user-agent"),
   });
   return c.json({ data: appointment });
+});
+
+app.post("/consultations/:id/export/pdf", requirePermission(Permission.CONSULTATION_READ), async (c) => {
+  const consultation = await consultationsRepo.getConsultation(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id")
+  );
+  if (!consultation) return c.json({ error: "not_found" }, 404);
+
+  const [patient] = await c.var.db
+    .select()
+    .from(patients)
+    .where(eq(patients.id, consultation.patientId));
+
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595, 842]);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  page.setFont(font);
+  const patientName = patient ? `${patient.firstName} ${patient.lastName}` : "Paciente";
+  const dateStr = new Date(consultation.startedAt).toLocaleDateString("es-ES");
+
+  page.setFont(boldFont);
+  page.drawText(`Resumen de Consulta — ${patientName}`, { x: 50, y: 800 });
+  page.setFont(font);
+  page.drawText(`Fecha: ${dateStr}`, { x: 50, y: 775 });
+  page.drawText(`Estado: ${consultation.status}`, { x: 50, y: 750 });
+  page.drawText(`Médico ID: ${consultation.physicianId}`, { x: 50, y: 725 });
+
+  let yPosition = 675;
+  const lineHeight = 70;
+
+  const sections = [
+    { label: "Queja principal", content: consultation.chiefComplaint || "—" },
+    { label: "Historia", content: consultation.history || "—" },
+    { label: "Examen", content: consultation.exam || "—" },
+    { label: "Evaluación", content: consultation.assessment || "—" },
+    { label: "Plan", content: consultation.plan || "—" },
+  ];
+
+  page.setFont(boldFont);
+  for (const section of sections) {
+    page.drawText(section.label, { x: 50, y: yPosition });
+    page.setFont(font);
+    const textLines = page.drawText(section.content, {
+      x: 50,
+      y: yPosition - 20,
+      lineHeight: 12,
+      maxWidth: 500,
+    });
+    yPosition -= lineHeight;
+    page.setFont(boldFont);
+  }
+
+  const pdfBytes = await pdfDoc.save();
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "document.export",
+    targetEntity: "document_export",
+    targetId: consultation.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+
+  return new Response(Buffer.from(pdfBytes), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="consulta-${consultation.id}.pdf"`,
+    },
+  });
 });
 
 export default app;
