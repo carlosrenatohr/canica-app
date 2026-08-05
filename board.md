@@ -55,6 +55,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | W2 | Consolidar `AGENTS.md` estilo hit: canónico, tool-neutral (consolida CLAUDE/ONBOARDING/README/docs) + `AGENTS_AUDIT.md` (histórico de consolidación) + `ONBOARDING.md` (handoff de sesión) | `~/Codee/hit/AGENTS.md` · `AGENTS_AUDIT.md` · `ONBOARDING.md` | — | 📋 Backlog | — |
 | W3 | Gate estandarizado de verificación tipo hit (`pnpm check` como único gate: typecheck + lint + test + e2e) + `skills-lock.json` (skills pinned con hash) | `~/Codee/hit/skills-lock.json` · AGENTS.md hit (gate) | — | 📋 Backlog | — |
 | W4 | Integrar Dredd con board/state de canica (`dredd board`/`status`/`metrics`) y definir el flujo standard completo (spec → task → review → merge) | `~/Codee/hit/.dredd/README.md` | — | 📋 Backlog | — |
+| W5 | Asegurar Cloudflare MCP + codebase-memory MCP instalados y usados de forma canónica (codebase-memory por encima de grep/glob del agente). Cloudflare MCP hoy NO está en `opencode.json` (solo hay skills); documentar y habilitar | `~/.config/opencode/opencode.json` · `AGENTS.md` (MCP tooling) | — | 📋 Backlog | — |
 
 ## Design & Growth
 
@@ -91,3 +92,6 @@ board es el plan de trabajo (incluye investigación y no-código).
   `README.md` actualizados con M12–M16 y gaps; commit `8d3b8fb`.
 - **Workflow & Standards (sección nueva)**: replicar Dredd + AGENTS.md consolidado + gate de
   verificación + skills-lock desde `~/Codee/hit` (W1–W4) como standard de trabajo uniforme.
+- **MCP canónico documentado** en `AGENTS.md` de canica: codebase-memory MCP como primera
+  opción para discovery de código, Cloudflare MCP cuando esté configurado (W5), Playwright MCP
+  para verificación en browser.

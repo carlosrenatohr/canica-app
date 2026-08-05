@@ -9,6 +9,20 @@ Product and architecture truth lives in **`.specs/`**. Do not duplicate it here.
 
 ---
 
+## MCP tooling (canonical usage)
+
+- **Code discovery: `codebase-memory` MCP is the first-class tool.** Prefer its graph tools
+  over raw `grep`/`glob`/file-search: `search_graph` → `trace_path` → `get_code_snippet` →
+  `query_graph` → `get_architecture`. Fall back to grep/glob only when searching string
+  literals, error messages, config values, or non-code files. Rules live in the global
+  `~/.config/opencode/AGENTS.md`.
+- **Cloudflare:** use the Cloudflare MCP when configured (task `board.md` W5). Until it is
+  installed, rely on the `cloudflare` / `wrangler` / `workers-best-practices` skills.
+- **Browser verification:** Playwright MCP (`playwright_browser_*` tools). See
+  `docs/how-to/development.md` for the known Chrome channel issue (task `board.md` Q1).
+
+---
+
 ## Before you write code
 
 1. Read `.specs/README.md` and the specs relevant to the task.
