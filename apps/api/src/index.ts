@@ -12,12 +12,12 @@ import { writeAudit } from "@canica/db/repos/audit";
 import { CreatePatientInput, UpdatePatientInput } from "@canica/validation";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
-const baseURL = process.env.API_BASE_URL ?? "http://localhost:3000";
+const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
 const db = createDb();
 const auth = createAuth({
   db,
   baseURL,
-  trustedOrigins: [baseURL, "http://localhost:3001"],
+  trustedOrigins: [baseURL, "http://localhost:3000", "http://localhost:3001"],
 });
 
 const app = new Hono<ApiEnv>();
