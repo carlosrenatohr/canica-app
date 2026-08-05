@@ -10,9 +10,12 @@ canica helps physicians reduce administrative burden with intelligent automation
 
 ## Status
 
-**Bootstrap in progress.** Monorepo tooling is scaffolded; product modules are not implemented yet.
+**Phase 1 (Digital Medical Records) en curso.** Monorepo scaffolded; pacientes, consultas
+(diagnósticos/prescripciones), timeline clínico, citas, PDF export y auditoría implementados
+y mergeados (M10–M16). Próximo: M17 (AI foundation).
 
-See [`.specs/roadmap.md`](./.specs/roadmap.md) for product phases.
+Estado vivo por milestone: [`docs/progress.md`](./docs/progress.md).  
+Deuda/trabajo conscientemente diferido: [`docs/backlog.md`](./docs/backlog.md).
 
 **How we build:** [Specification Driven Development](./.specs/spec-driven-development.md).  
 **Automated / scheduled agents (e.g. Hermes):** [`.specs/agent-automation.md`](./.specs/agent-automation.md).

@@ -25,12 +25,18 @@ Status is updated after each verified milestone.
 | M9 | Better Auth, RBAC (permission-based, DB matrix), org scoping | verified | signup/login/denial verified against Supabase Cloud; 401/403/cross-org denied; audit on PHI writes |
 | M10 | Next.js web shell and UI foundation | verified | Playwright e2e smoke (3/3 passed); typecheck green; PR #4 merged |
 | M11 | Patients | verified | detail/create/edit/delete pages; e2e smoke (7/7 passed); PR #5 merged |
-| M12 | Consultations, diagnoses, prescriptions | planned | unit, API integration, Playwright e2e |
-| M13 | Medical record timeline | planned | unit, API integration, Playwright e2e |
-| M14 | Appointments and reminders | planned | unit, API integration, Playwright e2e |
-| M15 | PDF export | planned | generation unit tests + download e2e |
-| M16 | Audit log UI and filters | planned | audit integration + access e2e |
+| M12 | Consultations, diagnoses, prescriptions | verified | M12B (PR #6) + M12A (PR #8) + M12C (PR #9) merged; repos tipados, 8 endpoints REST, UI; `pnpm typecheck` green |
+| M13 | Medical record timeline | verified | PR #10 merged; `getPatientTimeline` + `GET /patients/:id/timeline` + página timeline; typecheck green |
+| M14 | Appointments and reminders | verified (parcial) | PR #11 merged; CRUD + status transitions + API + UI citas; **reminders pendiente** (ver backlog) |
+| M15 | PDF export | verified (parcial) | PR #12 merged; export consulta PDF + audit + botón UI; **falta: prescripción, persistir fila document_exports** (ver backlog) |
+| M16 | Audit log UI and filters | verified (parcial) | PR #13 merged; `listAuditLogs` + `GET /audit` (AUDIT_READ) + página `/audit`; **falta: eventos login/logout** (ver backlog) |
 | M17 | AI package, stub provider, documentation agents | planned | provider contract tests + approval flow e2e |
+
+## Nota sobre verificación M12–M16
+
+M12–M16 se verificaron con `pnpm typecheck` (todo verde) y smoke manual de endpoints. Las
+pruebas automatizadas exigidas por la regla de completitud de módulo (unit, integración API,
+Playwright e2e) están pendientes para estos módulos — ver `docs/backlog.md`.
 
 ## Module completion rule
 

@@ -348,7 +348,7 @@ Human review required before merge. No production credentials or PHI fixtures.
 
 ## M12 — Consultations, diagnoses, prescriptions
 
-**Status:** planned
+**Status:** verified (typecheck + smoke; tests automatizados pendientes — ver backlog)
 
 ### Scope
 
@@ -360,10 +360,10 @@ Human review required before merge. No production credentials or PHI fixtures.
 
 ### Tests
 
-- Lifecycle unit tests
-- GraphQL mutation tests
-- Finalization authorization tests
-- Playwright encounter workflow
+- Lifecycle unit tests (pendiente)
+- GraphQL mutation tests (n/a — REST interim)
+- Finalization authorization tests (pendiente)
+- Playwright encounter workflow (pendiente)
 
 ### Security gate
 
@@ -373,9 +373,15 @@ Human review required for clinical finalization behavior.
 
 `feat(consultations): add encounter and prescription workflow`
 
+### Result
+
+M12B (`packages/db/src/repos/consultations.ts`) + M12A (8 endpoints REST: GET/POST consultations,
+finalize, diagnoses, prescriptions) + M12C (UI consultas: lista/crear/detalle con tabs).
+PRs #6, #8, #9 — mergeados.
+
 ## M13 — Medical record timeline
 
-**Status:** planned
+**Status:** verified (typecheck + smoke; tests automatizados pendientes — ver backlog)
 
 ### Scope
 
@@ -386,82 +392,103 @@ Human review required for clinical finalization behavior.
 
 ### Tests
 
-- Timeline ordering
-- Empty/loading/error states
-- Organization access denial
-- Playwright chart navigation
+- Timeline ordering (pendiente)
+- Empty/loading/error states (pendiente)
+- Organization access denial (pendiente)
+- Playwright chart navigation (pendiente)
 
 ### Commit
 
 `feat(records): add longitudinal patient timeline`
 
+### Result
+
+`getPatientTimeline`/`getMedicalRecord` en `packages/db/src/repos/medical-records.ts`,
+`GET /patients/:id/timeline`, página `/patients/[id]/timeline`. PR #10 — mergeado.
+
 ## M14 — Appointments
 
-**Status:** planned
+**Status:** verified parcial (reminders pendiente — ver backlog)
 
 ### Scope
 
-- Appointment lifecycle
-- Reception workflow
-- Visit-to-consultation link
-- Reminder abstraction with email stub
+- Appointment lifecycle (✅)
+- Reception workflow (✅ UI básica)
+- Visit-to-consultation link (❌ no implementado)
+- Reminder abstraction with email stub (❌ no implementado)
 
 ### Tests
 
-- Conflict and status rules
-- Role permissions
-- GraphQL integration
-- Playwright schedule flow
+- Conflict and status rules (pendiente)
+- Role permissions (pendiente)
+- GraphQL integration (n/a — REST interim)
+- Playwright schedule flow (pendiente)
 
 ### Commit
 
 `feat(appointments): add scheduling workflow`
 
+### Result
+
+`packages/db/src/repos/appointments.ts` (CRUD + status transitions), 4 endpoints API,
+UI `/appointments` + `/appointments/new`. PR #11 — mergeado.
+
 ## M15 — PDF export
 
-**Status:** planned
+**Status:** verified parcial (faltan piezas — ver backlog)
 
 ### Scope
 
-- Consultation export
-- Prescription export
-- Storage pointer and metadata
-- Authorized download
-- Audit generate/download
+- Consultation export (✅)
+- Prescription export (❌)
+- Storage pointer and metadata (❌ — no se persiste fila `document_exports`)
+- Authorized download (✅ inline)
+- Audit generate/download (✅ `document.export`)
 
 ### Tests
 
-- Deterministic PDF content
-- Permission checks
-- Download response
-- Playwright download flow
+- Deterministic PDF content (pendiente)
+- Permission checks (pendiente)
+- Download response (pendiente)
+- Playwright download flow (pendiente)
 
 ### Commit
 
 `feat(pdf): add clinical document exports`
 
+### Result
+
+Endpoint `POST /consultations/:id/export/pdf` con `pdf-lib`, botón "Descargar PDF" en detalle
+de consulta. PR #12 — mergeado.
+
 ## M16 — Audit logs
 
-**Status:** planned
+**Status:** verified parcial (login/logout pendiente — ver backlog)
 
 ### Scope
 
-- Restricted audit query
-- Filters by actor/action/entity/date
-- Immutable display
-- PHI-safe operational logs
+- Restricted audit query (✅ `GET /audit` con `AUDIT_READ`)
+- Filters by actor/action/entity/date (✅ `listAuditLogs`)
+- Immutable display (✅ append-only repo)
+- PHI-safe operational logs (✅)
+- Audit login/logout (❌ pendiente — ver backlog)
 
 ### Tests
 
-- Append behavior
-- Admin access
-- Non-admin denial
-- Filter correctness
-- Playwright audit access flow
+- Append behavior (pendiente)
+- Admin access (pendiente)
+- Non-admin denial (pendiente)
+- Filter correctness (pendiente)
+- Playwright audit access flow (pendiente)
 
 ### Commit
 
 `feat(audit): add restricted audit log access`
+
+### Result
+
+`listAuditLogs` con filtros en `packages/db/src/repos/audit.ts`, página `/audit` con filtros de
+acción/entidad, link en sidebar. PR #13 — mergeado.
 
 ## M17 — AI foundation
 

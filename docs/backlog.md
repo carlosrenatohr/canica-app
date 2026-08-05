@@ -14,9 +14,21 @@ once the MVP loop is complete.
 
 ## Open
 
-- [ ] **Audit login / failed-login / logout** — not yet written to `audit_logs`.
+- [ ] **Automated tests M12–M16** — estos módulos se verificaron solo con `pnpm typecheck`
+      + smoke manual. Falta: unit tests de repos/lógica, tests de integración API y
+      Playwright e2e de los flujos clave (encuentro clínico, timeline, citas, descarga PDF,
+      acceso a auditoría). Exigido por la regla de completitud de módulo.
+- [ ] **M14 reminders** — el milestone pedía "Reminder abstraction with email stub";
+      se implementó el ciclo de citas pero no la capa de recordatorios.
+- [ ] **M14 visit-to-consultation link** — crear consulta desde una cita; no implementado.
+- [ ] **M15 prescription export** — el milestone pedía "Prescription export" además del de
+      consulta; solo existe `POST /consultations/:id/export/pdf`.
+- [ ] **M15 persistir `document_exports`** — el repo `createDocumentExport` existe pero el
+      endpoint de export no inserta la fila (solo audita). Faltan metadata, storage pointer
+      y un listado de exports descargables.
+- [ ] **Audit login / failed-login / logout** — no yet written to `audit_logs`.
       Planned hook point is Better Auth `hooks.after`; needs DB access inside
-      `packages/auth`. See `docs/how-to/auth.md` → Known gaps. Target M16.
+      `packages/auth`. See `docs/how-to/auth.md` → Known gaps. Target M16 (still open).
 - [ ] **Admin endpoint for role changes** — roles are currently seed/data-only.
       `user:manage` permission exists but no route uses it. Needs an admin
       "update user role" endpoint (invite/role management).
@@ -38,7 +50,11 @@ once the MVP loop is complete.
 
 ## Done
 
-(none yet — populate as items close)
+- [x] **M12 consultations/diagnoses/prescriptions** — repos + endpoints + UI (PRs #6/#8/#9).
+- [x] **M13 medical record timeline** — repo + endpoint + UI (PR #10).
+- [x] **M14 appointments CRUD** — repo + endpoints + UI (PR #11).
+- [x] **M15 consultation PDF export** — endpoint + audit + UI button (PR #12).
+- [x] **M16 audit log query + UI** — listAuditLogs + GET /audit + página (PR #13).
 
 ---
 
@@ -46,3 +62,4 @@ once the MVP loop is complete.
 
 - Audit login events → M16 (audit log UI) when that milestone starts.
 - Role management endpoint → likely a Phase 1 admin slice; candidate for M11+.
+- Automated tests M12–M16 → prerequisite to mark those modules fully `verified`.
