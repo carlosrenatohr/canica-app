@@ -1,10 +1,9 @@
 // Typed patient repositories with organization scoping.
 // All reads/writes require organization_id to enforce tenant boundaries.
 import { and, eq } from "drizzle-orm";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { Db } from "../db";
 import * as schema from "../schema";
 
-export type Db = PostgresJsDatabase<typeof schema>;
 export type PatientRow = typeof schema.patients.$inferSelect;
 export type PatientWritableFields = Omit<
   typeof schema.patients.$inferInsert,

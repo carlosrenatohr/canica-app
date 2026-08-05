@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import { actorFromSession, hasPermission, type Auth, type AuthActor } from "@canica/auth";
-import type { Db } from "@canica/db/repos/permissions";
+import type { Db } from "@canica/db";
 import { getPermissionsForRole } from "@canica/db/repos/permissions";
 import type { PermissionKey } from "@canica/db/repos/permissions";
 
