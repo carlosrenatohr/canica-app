@@ -10,6 +10,7 @@ import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
 import * as consultationsRepo from "@canica/db/repos/consultations";
 import * as medicalRecordsRepo from "@canica/db/repos/medical-records";
+import * as appointmentsRepo from "@canica/db/repos/appointments";
 import { writeAudit } from "@canica/db/repos/audit";
 import {
   CreatePatientInput,
@@ -18,6 +19,8 @@ import {
   FinalizeConsultationInput,
   CreateDiagnosisInput,
   CreatePrescriptionInput,
+  CreateAppointmentInput,
+  UpdateAppointmentStatusInput,
 } from "@canica/validation";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
@@ -251,6 +254,79 @@ app.get("/patients/:id/timeline", requirePermission(Permission.PATIENT_READ), as
     }
   );
   return c.json({ data: entries });
+});
+
+app.use("/appointments/*", sessionMiddleware());
+
+app.get("/appointments", requirePermission(Permission.APPOINTMENT_READ), async (c) => {
+  const appointments = await appointmentsRepo.listAppointments(c.var.db, c.var.actor.organizationId, {
+    providerId: c.req.query("providerId") ?? undefined,
+    fromDate: c.req.query("fromDate") ?? undefined,
+    toDate: c.req.query("toDate") ?? undefined,
+    status: c.req.query("status") as
+      | "scheduled"
+      | "confirmed"
+      | "checked-in"
+      | "completed"
+      | "cancelled"
+      | "no-show"
+      | undefined,
+  });
+  return c.json({ data: appointments });
+});
+
+app.get("/appointments/:id", requirePermission(Permission.APPOINTMENT_READ), async (c) => {
+  const appointment = await appointmentsRepo.getAppointment(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id")
+  );
+  if (!appointment) return c.json({ error: "not_found" }, 404);
+  return c.json({ data: appointment });
+});
+
+app.post("/appointments", requirePermission(Permission.APPOINTMENT_WRITE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = CreateAppointmentInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const appointment = await appointmentsRepo.createAppointment(
+    c.var.db,
+    c.var.actor.organizationId,
+    parsed.data
+  );
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "appointment.create",
+    targetEntity: "appointment",
+    targetId: appointment.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: appointment }, 201);
+});
+
+app.patch("/appointments/:id/status", requirePermission(Permission.APPOINTMENT_WRITE), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = UpdateAppointmentStatusInput.safeParse(body);
+  if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
+  const appointment = await appointmentsRepo.updateAppointmentStatus(
+    c.var.db,
+    c.var.actor.organizationId,
+    c.req.param("id"),
+    parsed.data
+  );
+  if (!appointment) return c.json({ error: "not_found" }, 404);
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "appointment.status_change",
+    targetEntity: "appointment",
+    targetId: appointment.id,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+  return c.json({ data: appointment });
 });
 
 export default app;

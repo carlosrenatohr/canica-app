@@ -4,3 +4,4 @@ export * from "./schema";
 export * from "./repos/patients";
 export * from "./repos/consultations";
 export * from "./repos/medical-records";
+export * from "./repos/appointments";

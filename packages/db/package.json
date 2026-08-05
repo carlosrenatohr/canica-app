@@ -9,6 +9,7 @@
     "./repos/patients": "./src/repos/patients.ts",
     "./repos/consultations": "./src/repos/consultations.ts",
     "./repos/medical-records": "./src/repos/medical-records.ts",
+    "./repos/appointments": "./src/repos/appointments.ts",
     "./repos/permissions": "./src/repos/permissions.ts",
     "./repos/audit": "./src/repos/audit.ts",
     "./*": "./src/*"
