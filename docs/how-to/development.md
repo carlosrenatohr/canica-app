@@ -21,6 +21,23 @@ pnpm e2e
 
 Do not use npm, npx, yarn, or another package manager. Use `pnpm exec` for installed binaries and `pnpm dlx` for temporary CLIs.
 
+## Running the API and web dev servers
+
+`pnpm dev` starts both apps via turbo. The web proxy (`next.config.ts`) forwards
+`/api/*` → `http://localhost:3001` and `/api/auth/*` → `http://localhost:3001/api/auth/*`,
+so the Hono API **must** run on port **3001**:
+
+```bash
+# Terminal 1 — API (port 3001, required for the web proxy)
+PORT=3001 pnpm --filter @canica/api dev
+
+# Terminal 2 — Web (port 3000)
+pnpm --filter @canica/web dev
+```
+
+`apps/api/src/server.ts` defaults to port **3000**, which collides with the Next.js
+server — always pass `PORT=3001` when running the API in local dev.
+
 ## Playwright MCP
 
 Playwright MCP is configured globally in OpenCode at `~/.config/opencode/opencode.json`.
@@ -31,6 +48,14 @@ pnpm exec playwright install chromium
 ```
 
 Restart OpenCode after changing MCP configuration. MCP tools load only when OpenCode starts.
+
+**Known issue (Chrome channel):** the MCP config passes `BROWSER=chromium`, which
+`@playwright/mcp` resolves as the `chrome` channel → it looks for the branded
+Chrome at `/opt/google/chrome/chrome`. That binary is not installed (Playwright
+bundled Chromium is), so the browser fails to launch with
+"Chromium distribution 'chrome' is not found". Fix: point the MCP at the bundled
+Chromium with `--executable-path <path>` and restart the OpenCode session. Tracked
+in `board.md` → Q1.
 
 ## Local Supabase
 
