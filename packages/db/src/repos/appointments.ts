@@ -5,16 +5,21 @@ import * as schema from "../schema";
 export type AppointmentRow = typeof schema.appointments.$inferSelect;
 export type CreateAppointmentInput = Omit<
   typeof schema.appointments.$inferInsert,
-  "id" | "organizationId" | "createdAt" | "updatedAt" | "status"
+  "id" | "organizationId" | "createdAt" | "updatedAt" | "status" | "startDate" | "endDate"
 > & {
   startDate: string;
+  endDate?: string;
 };
 export type UpdateAppointmentStatusInput = {
   status: typeof schema.appointmentStatus.enumValues[number];
 };
-export type UpdateAppointmentInput = Partial<
-  Omit<CreateAppointmentInput, "patientId" | "providerId">
->;
+export type UpdateAppointmentInput = Omit<
+  Partial<Omit<CreateAppointmentInput, "patientId" | "providerId">>,
+  "startDate" | "endDate"
+> & {
+  startDate?: string;
+  endDate?: string;
+};
 
 export async function listAppointments(
   db: Db,
