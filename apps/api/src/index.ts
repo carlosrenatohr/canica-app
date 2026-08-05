@@ -13,7 +13,7 @@ import * as consultationsRepo from "@canica/db/repos/consultations";
 import * as medicalRecordsRepo from "@canica/db/repos/medical-records";
 import * as appointmentsRepo from "@canica/db/repos/appointments";
 import * as documentExportsRepo from "@canica/db/repos/document-exports";
-import { writeAudit } from "@canica/db/repos/audit";
+import { writeAudit, listAuditLogs } from "@canica/db/repos/audit";
 import {
   CreatePatientInput,
   UpdatePatientInput,
@@ -404,6 +404,19 @@ app.post("/consultations/:id/export/pdf", requirePermission(Permission.CONSULTAT
       "Content-Disposition": `inline; filename="consulta-${consultation.id}.pdf"`,
     },
   });
+});
+
+app.use("/audit/*", sessionMiddleware());
+
+app.get("/audit", requirePermission(Permission.AUDIT_READ), async (c) => {
+  const logs = await listAuditLogs(c.var.db, c.var.actor.organizationId, {
+    actorId: c.req.query("actorId") ?? undefined,
+    targetEntity: c.req.query("targetEntity") ?? undefined,
+    action: c.req.query("action") ?? undefined,
+    fromDate: c.req.query("fromDate") ?? undefined,
+    toDate: c.req.query("toDate") ?? undefined,
+  });
+  return c.json({ data: logs });
 });
 
 export default app;

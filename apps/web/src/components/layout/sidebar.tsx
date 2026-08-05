@@ -20,6 +20,16 @@ export function Sidebar() {
                 Pacientes
               </Button>
             </Link>
+            <Link href="/appointments">
+              <Button variant="ghost" className="w-full justify-start">
+                Citas
+              </Button>
+            </Link>
+            <Link href="/audit">
+              <Button variant="ghost" className="w-full justify-start">
+                Auditoría
+              </Button>
+            </Link>
             <form
               action="/api/auth/sign-out"
               method="post"
