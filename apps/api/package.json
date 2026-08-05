@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@canica/auth": "workspace:*",
     "@canica/db": "workspace:*",
     "@canica/validation": "workspace:*",
     "@hono/node-server": "^2.0.12",
