@@ -38,7 +38,8 @@ Product and architecture truth lives in **`.specs/`**. Do not duplicate it here.
 | SDD cycle & NL task envelope | `.specs/spec-driven-development.md` |
 | Hermes / automation contract | `.specs/agent-automation.md` |
 
-Draft notes may exist under `docs/`. **Approved decisions are in `.specs/`.**
+Draft notes may exist under `docs/`. **Approved decisions are in `.specs/`.**  
+Deferred work / technical debt lives in [`docs/backlog.md`](./docs/backlog.md) — add here what we consciously don't fix now.
 
 ---
 
