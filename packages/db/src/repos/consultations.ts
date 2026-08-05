@@ -24,6 +24,31 @@ export type FinalizeConsultationInput = {
   plan?: string | null;
 };
 
+export async function getOrCreateMedicalRecord(
+  db: Db,
+  organizationId: string,
+  patientId: string
+): Promise<string> {
+  const [existing] = await db
+    .select()
+    .from(schema.medicalRecords)
+    .where(
+      and(
+        eq(schema.medicalRecords.patientId, patientId),
+        eq(schema.medicalRecords.organizationId, organizationId)
+      )
+    );
+  if (existing) return existing.id;
+  const [created] = await db
+    .insert(schema.medicalRecords)
+    .values({
+      organizationId,
+      patientId,
+    })
+    .returning();
+  return created.id;
+}
+
 export async function listConsultations(
   db: Db,
   organizationId: string,
