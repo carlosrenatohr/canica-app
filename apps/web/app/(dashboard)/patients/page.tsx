@@ -22,6 +22,7 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     if (!session) return;
@@ -40,6 +41,14 @@ export default function PatientsPage() {
       });
   }, [session]);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Archivar este paciente?")) return;
+    const res = await fetch(`/api/patients/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setPatients((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
+
   if (!session) {
     return (
       <main className="p-8">
@@ -51,17 +60,31 @@ export default function PatientsPage() {
   if (loading) return <main className="p-8">Cargando pacientes…</main>;
   if (error) return <main className="p-8">Error: {error}</main>;
 
+  const filtered = patients.filter(
+    (p) =>
+      `${p.firstName} ${p.lastName}`.toLowerCase().includes(filter.toLowerCase())
+  );
+
   return (
     <main className="p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Pacientes</h1>
         <Button onClick={() => router.push("/patients/new")}>Nuevo paciente</Button>
       </div>
-      {patients.length === 0 ? (
-        <p className="text-muted-foreground">No hay pacientes.</p>
+      <div className="mb-4">
+        <Input
+          placeholder="Buscar paciente…"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-muted-foreground">
+          {patients.length === 0 ? "No hay pacientes." : "Sin resultados."}
+        </p>
       ) : (
         <ul className="space-y-2">
-          {patients.map((p) => (
+          {filtered.map((p) => (
             <li
               key={p.id}
               className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent cursor-pointer"
@@ -70,9 +93,21 @@ export default function PatientsPage() {
               <span>
                 {p.firstName} {p.lastName}
               </span>
-              <span className="text-sm text-muted-foreground">
-                {p.email ?? p.phone ?? "Sin contacto"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {p.email ?? p.phone ?? "Sin contacto"}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(p.id);
+                  }}
+                >
+                  Archivar
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
