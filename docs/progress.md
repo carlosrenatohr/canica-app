@@ -23,8 +23,8 @@ Status is updated after each verified milestone.
 | M7 | GraphQL schema, context, codegen, SDK | blocked | parked: duplicate `graphql@16/17` issue, see `docs/how-to/graphql-known-issue.md` |
 | M8 | Hono Worker API and health endpoint | verified | REST interim (patients CRUD + health); `pnpm typecheck` + `pnpm test` green |
 | M9 | Better Auth, RBAC (permission-based, DB matrix), org scoping | verified | signup/login/denial verified against Supabase Cloud; 401/403/cross-org denied; audit on PHI writes |
-| M10 | Next.js web shell and UI foundation | planned | Playwright browser smoke |
-| M11 | Patients | planned | unit, API integration, Playwright e2e |
+| M10 | Next.js web shell and UI foundation | verified | Playwright e2e smoke (3/3 passed); typecheck green; PR #4 merged |
+| M11 | Patients | in-progress | detail/create/edit/delete pages; e2e smoke (7/7 passed) |
 | M12 | Consultations, diagnoses, prescriptions | planned | unit, API integration, Playwright e2e |
 | M13 | Medical record timeline | planned | unit, API integration, Playwright e2e |
 | M14 | Appointments and reminders | planned | unit, API integration, Playwright e2e |
