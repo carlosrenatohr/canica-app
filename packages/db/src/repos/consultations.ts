@@ -4,7 +4,15 @@ import * as schema from "../schema";
 export type ConsultationRow = typeof schema.consultations.$inferSelect;
 export type ConsultationWritableFields = Omit<
   typeof schema.consultations.$inferInsert,
-  "id" | "organizationId" | "medicalRecordId" | "physicianId" | "status" | "createdAt" | "updatedAt" | "completedAt"
+  | "id"
+  | "organizationId"
+  | "medicalRecordId"
+  | "physicianId"
+  | "status"
+  | "createdAt"
+  | "updatedAt"
+  | "completedAt"
+  | "startedAt"
 > & {
   startedAt: string;
   chiefComplaint?: string | null;
