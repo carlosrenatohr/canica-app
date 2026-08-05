@@ -24,7 +24,7 @@ export default function SignupPage() {
         email,
         password,
         name,
-        additionalFields: { organizationId: orgId },
+        organizationId: orgId,
       }),
     });
     if (!res.ok) {
