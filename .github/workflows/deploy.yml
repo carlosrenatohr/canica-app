@@ -1,16 +1,14 @@
 name: Deploy to Cloudflare
 
 # canica-app is a pnpm monorepo: apps/api (Hono Worker) + apps/web (Next.js via OpenNext).
-# On every push to main this workflow builds and deploys BOTH to Cloudflare using the same
+# On every push to main this workflow deploys apps/api to Cloudflare using the same
 # account (Honchkrow1995 / b91df20a84a77a2eda9dcc47a7bead73) as hit & rana.
+# The web job is disabled until main's app code (uncommitted WIP) is complete; the API
+# needs no build so it can ship independently.
 #
-# Requires ONE repo secret: CLOUDFLARE_API_TOKEN — a token with "Workers Scripts: Edit" and
-# "Cloudflare Pages: Edit" on the account above. Create it at
-# https://dash.cloudflare.com/profile/api-tokens and add it at
-# https://github.com/carlosrenatohr/canica-app/settings/secrets/actions
-#
-# DB: only DATABASE_URL (secret) is required by apps/api at runtime; set it once on the Worker
-# via `wrangler secret put DATABASE_URL` (or a TS GH secret wired in a follow-up).
+# Requires repo secrets: CLOUDFLARE_API_TOKEN (token with "Workers Scripts: Edit" on the
+# account above) and DATABASE_URL (postgres connection string, required secret of the worker).
+# Create the token at https://dash.cloudflare.com/profile/api-tokens
 
 on:
   push:
@@ -36,24 +34,23 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         working-directory: .
+      - name: Prepare DATABASE_URL secrets file
+        if: secrets.DATABASE_URL != ''
+        env:
+          DB_VALUE: ${{ secrets.DATABASE_URL }}
+        working-directory: .
+        run: printf 'DATABASE_URL=%s\n' "${DB_VALUE}" > apps/api/secrets.env
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.ACCOUNT_ID }}
           workingDirectory: apps/api
-          command: deploy --minify
-      - name: Set DATABASE_URL secret (if provided)
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
-          DB_VALUE: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -z "${DB_VALUE}" ]; then
-            echo "DATABASE_URL secret not set; skipping."
-          else
-            echo "$DB_VALUE" | pnpm exec wrangler secret put DATABASE_URL --name canica-api
-          fi
+          command: deploy --minify ${{ secrets.DATABASE_URL != '' && '--secrets-file secrets.env' || '' }}
+      - name: Clean up secrets file
+        if: always()
+        working-directory: .
+        run: rm -f apps/api/secrets.env
       - name: Health check
         run: |
           BASE="${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}"
@@ -64,30 +61,3 @@ jobs:
             sleep 5
           done
           echo "Health check failed after retries."; exit 1
-
-  web:
-    name: Deploy Web Worker (apps/web, OpenNext)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-        working-directory: .
-      - name: Build OpenNext bundle
-        env:
-          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
-        run: pnpm build:worker
-      - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.ACCOUNT_ID }}
-          workingDirectory: apps/web
-          command: deploy --minify
