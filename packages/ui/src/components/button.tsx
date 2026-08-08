@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { type VariantProps, cva } from "class-variance-authority";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../lib/utils";
 
 const buttonVariants = cva(
@@ -7,10 +8,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-primary text-white hover:bg-primary-hover shadow-md hover:shadow-lg",
-        secondary: "bg-secondary text-white hover:opacity-90 shadow-md hover:shadow-lg",
-        outline: "border border-border bg-transparent hover:bg-secondary/5",
-        ghost: "border-transparent hover:bg-secondary/5",
+        primary: "bg-primary text-white hover:bg-primary-hover shadow-md hover:shadow-lg dark:text-primary",
+        secondary: "bg-accent text-white hover:opacity-90 shadow-md hover:shadow-lg dark:text-accent",
+        outline: "border border-border bg-transparent hover:bg-accent/5",
+        ghost: "border-transparent hover:bg-accent/5",
         danger: "bg-danger text-white hover:opacity-90",
       },
       size: {
@@ -29,19 +30,24 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => (
-    <button
-      className={cn(
-        buttonVariants({ variant, size, className }),
-        "rounded-[var(--radius-button)] motion-button",
-      )}
-      {...props}
-      ref={ref}
-    />
-  ),
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
+    return (
+      <Comp
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          "rounded-[var(--radius-button)] motion-button",
+        )}
+        {...props}
+        ref={ref}
+      />
+    );
+  },
 );
 Button.displayName = "Button";
 

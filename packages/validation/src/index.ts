@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const UUID = z.uuid();
 export const ISODate = z.string().datetime();
+export const DateTimeLocal = z.string().datetime({ precision: 0, offset: false }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/));
 
 // Input for creating an organization.
 export const CreateOrganizationInput = z.object({
@@ -50,7 +51,7 @@ export const AiSuggestionStatus = z.enum(["proposed", "accepted", "rejected", "e
 // Clinical encounter between a physician and a patient.
 export const CreateConsultationInput = z.object({
   patientId: UUID,
-  startedAt: ISODate,
+  startedAt: DateTimeLocal,
   chiefComplaint: z.string().optional(),
 });
 
@@ -89,8 +90,8 @@ export const CreatePrescriptionInput = z.object({
 export const CreateAppointmentInput = z.object({
   patientId: UUID,
   providerId: UUID,
-  startDate: ISODate,
-  endDate: ISODate.optional(),
+  startDate: DateTimeLocal,
+  endDate: DateTimeLocal.optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
 });
