@@ -34,7 +34,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 03 | M14 Appointments CRUD (repo + API + UI) | `.specs/domain-model.md` | — | ✅ Done | #11 |
 | 04 | M15 PDF export consulta + audit + botón UI | `.specs/domain-model.md` | — | ✅ Done | #12 |
 | 05 | M16 Audit log query + UI `/audit` | `.specs/security-hipaa.md` | — | ✅ Done | #13 |
-| 06 | Design system: aplicación de tema (paleta navy/emerald/sky, Geist, dark mode, `packages/ui`) — cerrar scope M10 | `.specs/design-system.md` | — | 🔜 Ready | — |
+| 06 | Design system: aplicación de tema (paleta navy/emerald/sky, Geist, dark mode, `packages/ui`) — cerrar scope M10 | `.specs/design-system.md` | — | ✅ Done | — |
 | 07 | Attachments (Phase 1): upload/list/download + Supabase Storage + UI | `.specs/domain-model.md` | — | 📋 Backlog | — |
 | 08 | M15 completion: export de prescripción + persistir `document_exports` + listado descargable | `.specs/domain-model.md` | — | 📋 Backlog | — |
 | 09 | M14 leftovers: reminders (stub email) + link cita → consulta | `.specs/roadmap.md` (Phase 3) | — | 📋 Backlog | — |
