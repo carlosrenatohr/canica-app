@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     include: ["**/*.test.ts"],
-    exclude: ["node_modules/**", "dist/**", "tests/e2e/**"]
+    exclude: ["node_modules/**", "dist/**", "tests/e2e/**"],
+    pool: "forks",
   }
 });
