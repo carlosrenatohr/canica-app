@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, use } from "react";
+import {
+  Button,
+  Input,
+  Label,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
@@ -22,8 +24,9 @@ interface Patient {
 export default function EditPatientPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -33,7 +36,7 @@ export default function EditPatientPage({
 
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${params.id}`)
+    fetch(`/api/patients/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -46,7 +49,7 @@ export default function EditPatientPage({
         setError(err.message);
         setLoading(false);
       });
-  }, [session, params.id]);
+  }, [session, id]);
 
   if (!session) {
     return (

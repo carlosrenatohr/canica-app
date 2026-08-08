@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, use } from "react";
+import {
+  Button,
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+  Skeleton,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { Download, FileText } from "lucide-react";
+import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface Consultation {
   id: string;
@@ -44,11 +60,45 @@ interface Prescription {
   createdAt: string;
 }
 
+function statusVariant(
+  status: Consultation["status"],
+): "success" | "warning" | "neutral" {
+  if (status === "finalized") return "success";
+  if (status === "amended") return "warning";
+  return "neutral";
+}
+
+function statusLabel(status: Consultation["status"]): string {
+  return { draft: "Borrador", finalized: "Finalizada", amended: "Modificada" }[
+    status
+  ];
+}
+
+function Section({
+  label,
+  children,
+}: {
+  label: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-4">
+      <p className="text-xs font-semibold text-muted">{label}</p>
+      {children ? (
+        <p className="mt-1 text-small leading-relaxed">{children}</p>
+      ) : (
+        <p className="mt-1 text-small text-muted">Sin registrar</p>
+      )}
+    </div>
+  );
+}
+
 export default function ConsultationDetailPage({
   params,
 }: {
-  params: { id: string; consultationId: string };
+  params: Promise<{ id: string; consultationId: string }>;
 }) {
+  const { id, consultationId } = use(params);
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [consultation, setConsultation] = useState<Consultation | null>(null);
@@ -56,14 +106,21 @@ export default function ConsultationDetailPage({
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"diagnoses" | "prescriptions">("diagnoses");
+
+  useSafePageTitle("Consulta");
 
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch(`/api/consultations/${params.consultationId}`).then((r) => r.json()),
-      fetch(`/api/consultations/${params.consultationId}/diagnoses`).then((r) => r.json()),
-      fetch(`/api/consultations/${params.consultationId}/prescriptions`).then((r) => r.json()),
+      fetch(`/api/consultations/${consultationId}`).then((r) =>
+        r.json(),
+      ),
+      fetch(`/api/consultations/${consultationId}/diagnoses`).then((r) =>
+        r.json(),
+      ),
+      fetch(`/api/consultations/${consultationId}/prescriptions`).then(
+        (r) => r.json(),
+      ),
     ])
       .then(([c, d, p]) => {
         setConsultation(c.data);
@@ -71,51 +128,79 @@ export default function ConsultationDetailPage({
         setPrescriptions(p.data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session, params.consultationId]);
+  }, [session, consultationId]);
 
   if (!session) {
     return (
-      <div className="p-8">
-        <p>Debes iniciar sesión para ver esta consulta.</p>
-      </div>
+      <main className="p-8">
+        <p className="text-muted-foreground">
+          Debes iniciar sesión para ver esta consulta.
+        </p>
+      </main>
     );
   }
 
-  if (loading) return <div className="p-8">Cargando consulta…</div>;
-  if (error) return <div className="p-8">Error: {error}</div>;
-  if (!consultation) return <div className="p-8">Consulta no encontrada.</div>;
-
-  const statusLabel = {
-    draft: "Borrador",
-    finalized: "Finalizada",
-    amended: "Modificada",
-  }[consultation.status];
+  if (loading) {
+    return (
+      <main className="p-8">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </main>
+    );
+  }
+  if (error) {
+    return (
+      <main className="p-8">
+        <p className="text-danger">Error: {error}</p>
+      </main>
+    );
+  }
+  if (!consultation) {
+    return (
+      <main className="p-8">
+        <p className="text-muted-foreground">Consulta no encontrada.</p>
+      </main>
+    );
+  }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Consulta del {new Date(consultation.startedAt).toLocaleDateString("es-ES")}</h1>
+    <main className="p-8 space-y-6 max-w-5xl">
+      {/* Consultation header with primary action prominent (DS principle #4) */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+            <FileText className="h-5 w-5" />
+          </div>
+          <h1 className="text-display font-semibold text-primary">
+            Consulta del{" "}
+            {new Date(consultation.startedAt).toLocaleDateString("es-ES", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </h1>
+          <Badge variant={statusVariant(consultation.status)}>
+            {statusLabel(consultation.status)}
+          </Badge>
+        </div>
         <div className="flex gap-2">
-          <span className={`px-2 py-1 rounded text-xs ${
-            consultation.status === "finalized"
-              ? "bg-green-100 text-green-800"
-              : consultation.status === "amended"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-gray-100 text-gray-800"
-          }`}>
-            {statusLabel}
-          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={async () => {
-              const res = await fetch(`/api/consultations/${params.consultationId}/export/pdf`, {
-                headers: { Accept: "application/pdf" },
-              });
+              const res = await fetch(
+                `/api/consultations/${consultationId}/export/pdf`,
+                {
+                  headers: { Accept: "application/pdf" },
+                },
+              );
               if (!res.ok) {
                 alert("Error generando PDF");
                 return;
@@ -124,119 +209,137 @@ export default function ConsultationDetailPage({
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url;
-              a.download = `consulta-${params.consultationId}.pdf`;
+              a.download = `consulta-${consultationId}.pdf`;
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
               window.URL.revokeObjectURL(url);
             }}
           >
-            Descargar PDF
+            <Download className="h-4 w-4" />
+            <span className="ml-1">Descargar PDF</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => router.push(`/patients/${params.id}/consultations`)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/patients/${id}/consultations`)}
+          >
             Volver
           </Button>
         </div>
       </div>
 
-      <div className="space-y-6 mb-8">
-        {consultation.chiefComplaint && (
-          <>
-            <dt className="text-sm font-medium text-muted-foreground">Queja principal</dt>
-            <dd>{consultation.chiefComplaint}</dd>
-          </>
-        )}
-        {consultation.history && (
-          <>
-            <dt className="text-sm font-medium text-muted-foreground">Examen</dt>
-            <dd>{consultation.history}</dd>
-          </>
-        )}
-        {consultation.exam && (
-          <>
-            <dt className="text-sm font-medium text-muted-foreground">Evolución</dt>
-            <dd>{consultation.exam}</dd>
-          </>
-        )}
-        {consultation.assessment && (
-          <>
-            <dt className="text-sm font-medium text-muted-foreground">Evaluación</dt>
-            <dd>{consultation.assessment}</dd>
-          </>
-        )}
-        {consultation.plan && (
-          <>
-            <dt className="text-sm font-medium text-muted-foreground">Plan</dt>
-            <dd>{consultation.plan}</dd>
-          </>
-        )}
-      </div>
+      {/* Progressive disclosure: queja → historia → examen → evaluación → plan (DS insight: ClyHealth) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Progreso de la consulta</CardTitle>
+          <CardDescription>
+            Registro clínico completo de la visita.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Section label="Queja principal">
+            {consultation.chiefComplaint || undefined}
+          </Section>
+          <Section label="Historia clínica">
+            {consultation.history || undefined}
+          </Section>
+          <Section label="Examen">{consultation.exam || undefined}</Section>
+          <Section label="Evaluación / Diagnóstico">
+            {consultation.assessment || undefined}
+          </Section>
+          <Section label="Plan">{consultation.plan || undefined}</Section>
+        </CardContent>
+      </Card>
 
-      <div>
-        <div className="flex gap-4 border-b mb-4">
-          <button
-            onClick={() => setActiveTab("diagnoses")}
-            className={`pb-2 px-1 ${activeTab === "diagnoses" ? "border-b-2 border-blue-600 text-blue-600" : "text-muted-foreground"}`}
-          >
+      {/* Tabbed sub-resources (diagnoses / prescriptions) per DS principle #1 progressive disclosure */}
+      <Tabs defaultValue="diagnoses" className="w-full">
+        <TabsList>
+          <TabsTrigger value="diagnoses">
             Diagnósticos ({diagnoses.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("prescriptions")}
-            className={`pb-2 px-1 ${activeTab === "prescriptions" ? "border-b-2 border-blue-600 text-blue-600" : "text-muted-foreground"}`}
-          >
+          </TabsTrigger>
+          <TabsTrigger value="prescriptions">
             Prescripciones ({prescriptions.length})
-          </button>
-        </div>
+          </TabsTrigger>
+        </TabsList>
 
-        {activeTab === "diagnoses" && (
-          <div>
-            {diagnoses.length === 0 ? (
-              <p className="text-muted-foreground">No hay diagnósticos.</p>
-            ) : (
-              <ul className="space-y-3">
-                {diagnoses.map((d) => (
-                  <li key={d.id} className="border rounded p-3">
-                    <div className="flex justify-between">
-                      <strong>{d.description}</strong>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        d.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                      }`}>
+        <TabsContent value="diagnoses" className="mt-4">
+          {diagnoses.length === 0 ? (
+            <p className="text-small text-muted-foreground">
+              No hay diagnósticos registados.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {diagnoses.map((d) => (
+                <Card key={d.id} variant="default">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">{d.description}</p>
+                        {d.primary && (
+                          <Badge variant="neutral" className="text-xs">
+                            Principal
+                          </Badge>
+                        )}
+                        {(d.codingSystem || d.code) && (
+                          <p className="text-xs text-muted-foreground">
+                            {d.codingSystem} {d.code}
+                          </p>
+                        )}
+                      </div>
+                      <Badge
+                        variant={d.status === "active" ? "success" : "neutral"}
+                        className="text-xs"
+                      >
                         {d.status === "active" ? "Activo" : d.status}
-                      </span>
+                      </Badge>
                     </div>
-                    {d.primary && <span className="text-xs text-muted-foreground">Principal</span>}
-                    {(d.codingSystem || d.code) && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {d.codingSystem} {d.code}
+                  </CardContent>
+                </Card>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+
+        <TabsContent value="prescriptions" className="mt-4">
+          {prescriptions.length === 0 ? (
+            <p className="text-small text-muted-foreground">
+              No hay prescripciones registradas.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {prescriptions.map((p) => (
+                <Card key={p.id} variant="default">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-h3">
+                      {p.medicationName} {p.strength} {p.form}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-1">
+                    <p className="text-small">
+                      Dosis: {p.dose} · Ruta: {p.route} · Frecuencia:{" "}
+                      {p.frequency} · Duración: {p.duration}
+                    </p>
+                    {p.instructions && (
+                      <p className="text-small text-muted-foreground">
+                        Indicaciones: {p.instructions}
                       </p>
                     )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {activeTab === "prescriptions" && (
-          <div>
-            {prescriptions.length === 0 ? (
-              <p className="text-muted-foreground">No hay prescripciones.</p>
-            ) : (
-              <ul className="space-y-3">
-                {prescriptions.map((p) => (
-                  <li key={p.id} className="border rounded p-3">
-                    <strong>{p.medicationName} {p.strength} {p.form}</strong>
-                    <p className="text-sm mt-1">
-                      Dosis: {p.dose} | Ruta: {p.route} | Frecuencia: {p.frequency} | Duración: {p.duration}
-                    </p>
-                    {p.instructions && <p className="text-sm text-muted-foreground mt-1">Indicaciones: {p.instructions}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+                  </CardContent>
+                  <CardFooter className="p-4 pt-0">
+                    <Badge
+                      variant={p.status === "active" ? "success" : "neutral"}
+                      className="text-xs"
+                    >
+                      {p.status}
+                    </Badge>
+                  </CardFooter>
+                </Card>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+      </Tabs>
+    </main>
   );
 }

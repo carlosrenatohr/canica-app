@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, use } from "react";
+import {
+  Button,
+  Input,
+  Label,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface Patient {
   id: string;
@@ -16,13 +19,15 @@ interface Patient {
 export default function NewConsultationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
+  useSafePageTitle("Nueva consulta");
   const [form, setForm] = useState({
     startedAt: new Date().toISOString().slice(0, 16),
     chiefComplaint: "",
@@ -30,11 +35,11 @@ export default function NewConsultationPage({
 
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${params.id}`)
+    fetch(`/api/patients/${id}`)
       .then((res) => res.json())
       .then((data) => setPatient(data.data))
       .catch(() => {});
-  }, [session, params.id]);
+  }, [session, id]);
 
   if (!session) {
     return (
@@ -52,7 +57,7 @@ export default function NewConsultationPage({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        patientId: params.id,
+        patientId: id,
         startedAt: form.startedAt,
         chiefComplaint: form.chiefComplaint || undefined,
       }),
@@ -64,14 +69,18 @@ export default function NewConsultationPage({
       return;
     }
     const data = await res.json();
-    router.push(`/patients/${params.id}/consultations/${data.data.id}`);
+    router.push(`/patients/${id}/consultations/${data.data.id}`);
   };
 
-  const displayName = patient ? `${patient.firstName} ${patient.lastName}` : params.id;
+  const displayName = patient
+    ? `${patient.firstName} ${patient.lastName}`
+    : id;
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-semibold mb-6">Nueva consulta — {displayName}</h1>
+      <h1 className="text-2xl font-semibold mb-6">
+        Nueva consulta — {displayName}
+      </h1>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
           <Label htmlFor="startedAt">Fecha y hora *</Label>
@@ -79,7 +88,9 @@ export default function NewConsultationPage({
             id="startedAt"
             type="datetime-local"
             value={form.startedAt}
-            onChange={(e) => setForm((f) => ({ ...f, startedAt: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, startedAt: e.target.value }))
+            }
             required
           />
         </div>
@@ -88,7 +99,9 @@ export default function NewConsultationPage({
           <textarea
             id="chiefComplaint"
             value={form.chiefComplaint}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm((f) => ({ ...f, chiefComplaint: e.target.value }))}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setForm((f) => ({ ...f, chiefComplaint: e.target.value }))
+            }
             placeholder="Describe la razón de la visita..."
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />

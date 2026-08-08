@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, use } from "react";
+import {
+  Button,
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+  EmptyState,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { FileText, Calendar } from "lucide-react";
+import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface Consultation {
   id: string;
@@ -21,11 +31,26 @@ interface Patient {
   lastName: string;
 }
 
+function statusVariant(
+  status: Consultation["status"],
+): "default" | "success" | "warning" | "neutral" {
+  if (status === "finalized") return "success";
+  if (status === "amended") return "warning";
+  return "neutral";
+}
+
+function statusLabel(status: Consultation["status"]): string {
+  return { draft: "Borrador", finalized: "Finalizada", amended: "Modificada" }[
+    status
+  ];
+}
+
 export default function ConsultationListPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -33,93 +58,118 @@ export default function ConsultationListPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useSafePageTitle("Consultas");
+
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${params.id}`)
-      .then((res) => res.json())
-      .then((data) => setPatient(data.data))
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-    fetch(`/api/consultations?patientId=${params.id}`)
-      .then((res) => {
+    Promise.all([
+      fetch(`/api/patients/${id}`).then((res) => res.json()),
+      fetch(`/api/consultations?patientId=${id}`).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
-      })
-      .then((data) => {
-        setConsultations(data.data);
+      }),
+    ])
+      .then(([p, c]) => {
+        setPatient(p.data);
+        setConsultations(c.data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session, params.id]);
+  }, [session, id]);
 
   if (!session) {
     return (
-      <div className="p-8">
-        <p>Debes iniciar sesión para ver las consultas.</p>
-      </div>
+      <main className="p-8">
+        <p className="text-muted-foreground">
+          Debes iniciar sesión para ver las consultas.
+        </p>
+      </main>
     );
   }
-
-  if (loading) return <div className="p-8">Cargando consultas…</div>;
-  if (error) return <div className="p-8">Error: {error}</div>;
 
   const displayName = patient ? `${patient.firstName} ${patient.lastName}` : "";
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">
+    <main className="p-8 space-y-6 max-w-7xl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-display font-semibold text-primary">
           Consultas{displayName ? ` de ${displayName}` : ""}
         </h1>
-        <Button onClick={() => router.push(`/patients/${params.id}/consultations/new`)}>
+        <Button
+          onClick={() =>
+            router.push(`/patients/${id}/consultations/new`)
+          }
+        >
           Nueva consulta
         </Button>
       </div>
-      {consultations.length === 0 ? (
-        <p className="text-muted-foreground">No hay consultas registradas.</p>
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+      ) : error ? (
+        <p className="text-danger">Error: {error}</p>
+      ) : consultations.length === 0 ? (
+        <EmptyState
+          title="Sin consultas"
+          description="Aún no hay consultas registradas para este paciente."
+          icon={<FileText className="h-10 w-10" />}
+          actionLabel="Crear primera consulta"
+          onAction={() =>
+            router.push(`/patients/${id}/consultations/new`)
+          }
+        />
       ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="text-left py-2">Fecha</th>
-              <th className="text-left py-2">Estado</th>
-              <th className="text-left py-2">Queja principal</th>
-              <th className="text-left py-2">Creado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {consultations.map((c) => (
-              <tr key={c.id} className="border-t">
-                <td className="py-2">
-                  <Link href={`/patients/${params.id}/consultations/${c.id}`} className="text-blue-600 hover:underline">
-                    {new Date(c.startedAt).toLocaleDateString("es-ES")}
-                  </Link>
-                </td>
-                <td className="py-2">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    c.status === "finalized"
-                      ? "bg-green-100 text-green-800"
-                      : c.status === "amended"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}>
-                    {c.status}
-                  </span>
-                </td>
-                <td className="py-2">{c.chiefComplaint || "-"}</td>
-                <td className="py-2 text-sm text-muted-foreground">
-                  {new Date(c.createdAt).toLocaleDateString("es-ES")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {consultations.map((c) => (
+            <Card
+              key={c.id}
+              variant="interactive"
+              className="motion-card group"
+              onClick={() =>
+                router.push(`/patients/${id}/consultations/${c.id}`)
+              }
+            >
+              <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <CardTitle className="text-h3">
+                      {new Date(c.startedAt).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </CardTitle>
+                    <Badge
+                      variant={statusVariant(c.status)}
+                      className="text-xs"
+                    >
+                      {statusLabel(c.status)}
+                    </Badge>
+                  </div>
+                </div>
+                <Calendar className="h-4 w-4 text-muted" />
+              </CardHeader>
+              {c.chiefComplaint && (
+                <CardContent>
+                  <p className="line-clamp-2 text-small text-muted">
+                    {c.chiefComplaint}
+                  </p>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
       )}
-    </div>
+    </main>
   );
 }

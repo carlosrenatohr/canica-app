@@ -155,17 +155,18 @@ export function Sidebar() {
           </nav>
 
           <div className="flex flex-col gap-1 p-2">
-            <form action="/api/auth/sign-out" method="post">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                size="sm"
-                type="submit"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Cerrar sesión</span>
-              </Button>
-            </form>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3"
+              size="sm"
+              onClick={async () => {
+                await authClient.signOut();
+                window.location.href = "/login";
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </Button>
           </div>
         </aside>
       </>
@@ -210,17 +211,18 @@ export function Sidebar() {
       </div>
 
       <div className="flex flex-col gap-1 p-2">
-        <form action="/api/auth/sign-out" method="post">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3"
-            size="sm"
-            type="submit"
-          >
-            <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Cerrar sesión</span>}
-          </Button>
-        </form>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3"
+          size="sm"
+          onClick={async () => {
+            await authClient.signOut();
+            window.location.href = "/login";
+          }}
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && <span>Cerrar sesión</span>}
+        </Button>
         <Button
           variant="ghost"
           size="sm"

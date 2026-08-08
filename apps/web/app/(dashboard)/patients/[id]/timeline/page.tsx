@@ -1,10 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, use } from "react";
+import {
+  Button,
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  Skeleton,
+  EmptyState,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  FileText,
+  ClipboardList,
+  Pill,
+  ShieldCheck,
+  CalendarDays,
+  AlertCircle,
+} from "lucide-react";
+import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface TimelineEntry {
   type: "consultation" | "diagnosis" | "prescription" | "attachment";
@@ -21,33 +40,65 @@ interface Patient {
   lastName: string;
 }
 
-const typeLabels: Record<TimelineEntry["type"], string> = {
-  consultation: "Consulta",
-  diagnosis: "Diagnóstico",
-  prescription: "Prescripción",
-  attachment: "Documento",
+const typeConfig: Record<
+  TimelineEntry["type"],
+  {
+    label: string;
+    icon: React.ReactNode;
+    badge: "default" | "success" | "warning" | "neutral";
+  }
+> = {
+  consultation: {
+    label: "Consulta",
+    icon: <ClipboardList className="h-5 w-5" />,
+    badge: "default",
+  },
+  diagnosis: {
+    label: "Diagnóstico",
+    icon: <ShieldCheck className="h-5 w-5" />,
+    badge: "success",
+  },
+  prescription: {
+    label: "Prescripción",
+    icon: <Pill className="h-5 w-5" />,
+    badge: "neutral",
+  },
+  attachment: {
+    label: "Documento",
+    icon: <FileText className="h-5 w-5" />,
+    badge: "neutral",
+  },
 };
 
-const typeIcons: Record<TimelineEntry["type"], string> = {
-  consultation: "🩺",
-  diagnosis: "🔍",
-  prescription: "💊",
-  attachment: "📎",
-};
+function statusVariant(
+  type: TimelineEntry["type"],
+  metadata: Record<string, unknown>,
+): "success" | "warning" | "neutral" {
+  const status = metadata?.status;
+  if (type === "consultation") {
+    if (status === "finalized") return "success";
+    if (status === "amended") return "warning";
+    return "neutral";
+  }
+  if (status === "active" || status === "completed") return "success";
+  return "neutral";
+}
 
-export default function TimelinePage({ params }: { params: { id: string } }) {
+export default function TimelinePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
+  useSafePageTitle("Historial clínico");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch(`/api/patients/${params.id}`).then((r) => r.json()),
-      fetch(`/api/patients/${params.id}/timeline`).then((r) => {
+      fetch(`/api/patients/${id}`).then((r) => r.json()),
+      fetch(`/api/patients/${id}/timeline`).then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       }),
@@ -57,85 +108,126 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
         setEntries(t.data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session, params.id]);
+  }, [session, id]);
 
   if (!session) {
     return (
-      <div className="p-8">
-        <p>Debes iniciar sesión para ver el historial clínico.</p>
-      </div>
+      <main className="p-8">
+        <p className="text-muted-foreground">
+          Debes iniciar sesión para ver el historial clínico.
+        </p>
+      </main>
     );
   }
-
-  if (loading) return <div className="p-8">Cargando historial…</div>;
-  if (error) return <div className="p-8">Error: {error}</div>;
 
   const displayName = patient ? `${patient.firstName} ${patient.lastName}` : "";
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">
+    <main className="p-8 space-y-6 max-w-5xl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-display font-semibold text-primary">
           Historial clínico{displayName ? ` de ${displayName}` : ""}
         </h1>
-        <Button onClick={() => router.push(`/patients/${params.id}/consultations/new`)}>
+        <Button
+          onClick={() =>
+            router.push(`/patients/${id}/consultations/new`)
+          }
+        >
           Nueva consulta
         </Button>
       </div>
 
-      {entries.length === 0 ? (
-        <p className="text-muted-foreground">No hay actividad clínica registrada.</p>
-      ) : (
-        <ul className="space-y-4">
-          {entries.map((entry) => (
-            <li key={`${entry.type}-${entry.id}`} className="border rounded-lg p-4 hover:bg-gray-50">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">{typeIcons[entry.type]}</span>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <strong className="font-medium">{entry.title || typeLabels[entry.type]}</strong>
-                    <time className="text-sm text-muted-foreground">
-                      {new Date(entry.createdAt).toLocaleDateString("es-ES", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </time>
-                  </div>
-                  {entry.subtitle && (
-                    <p className="text-sm text-muted-foreground">{entry.subtitle}</p>
-                  )}
-                  {entry.type === "consultation" && typeof entry.metadata?.status === "string" && (
-                    <span className={`text-xs px-2 py-1 rounded mt-1 inline-block ${
-                      entry.metadata.status === "finalized"
-                        ? "bg-green-100 text-green-800"
-                        : entry.metadata.status === "amended"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}>
-                      {entry.metadata.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {entry.type === "consultation" && (
-                <Link
-                  href={`/patients/${params.id}/consultations/${entry.id}`}
-                  className="text-sm text-blue-600 hover:underline mt-2 block"
-                >
-                  Ver consulta →
-                </Link>
-              )}
-            </li>
+      {loading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
           ))}
-        </ul>
+        </div>
+      ) : error ? (
+        <p className="text-danger">Error: {error}</p>
+      ) : entries.length === 0 ? (
+        <EmptyState
+          title="Sin historial"
+          description="Aún no hay actividad clínica registrada para este paciente."
+          icon={<CalendarDays className="h-10 w-10" />}
+          actionLabel="Crear primera consulta"
+          onAction={() =>
+            router.push(`/patients/${id}/consultations/new`)
+          }
+        />
+      ) : (
+        <div className="relative ml-2 space-y-6 before:absolute before:inset-y-0 before:w-px before:bg-border before:left-[-1px]">
+          {entries.map((entry, idx) => {
+            const config = typeConfig[entry.type];
+            return (
+              <div key={`${entry.type}-${entry.id}`} className="relative pl-6">
+                <div className="absolute left-[-12px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-secondary bg-surface text-secondary">
+                  {config.icon}
+                </div>
+                <Card
+                  variant="default"
+                  className="border-l-2 border-l-secondary"
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-h3">
+                        {entry.title || config.label}
+                      </CardTitle>
+                      <Badge
+                        variant={statusVariant(entry.type, entry.metadata)}
+                      >
+                        {(entry.metadata?.status as string) ?? config.label}
+                      </Badge>
+                    </div>
+                    <CardDescription className="flex items-center gap-2 text-small text-muted">
+                      <time dateTime={entry.createdAt}>
+                        {new Date(entry.createdAt).toLocaleDateString("es-ES", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                      <span aria-hidden>·</span>
+                      <span className="flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {config.label}
+                      </span>
+                    </CardDescription>
+                    {idx === 0 && (
+                      <Badge variant="warning" className="mt-1 text-xs">
+                        Más reciente
+                      </Badge>
+                    )}
+                  </CardHeader>
+                  {entry.subtitle && (
+                    <CardContent>
+                      <p className="text-small leading-relaxed">
+                        {entry.subtitle}
+                      </p>
+                    </CardContent>
+                  )}
+                  {entry.type === "consultation" && (
+                    <CardContent>
+                      <Link
+                        href={`/patients/${id}/consultations/${entry.id}`}
+                        className="text-small text-primary hover:underline"
+                      >
+                        Ver consulta →
+                      </Link>
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            );
+          })}
+        </div>
       )}
-    </div>
+    </main>
   );
 }
