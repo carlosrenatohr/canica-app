@@ -1,49 +1,70 @@
-/* Inter typography (400-700, no 800+) — must be first for @import rules */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss";
 
-/* Design tokens — see docs/styles-design.md */
 @theme {
-  /* Brand — NEVER changes between themes */
-  --color-primary: #0F766E;
-  --color-primary-hover: #115E59;
-  --color-primary-light: #CCFBF1;
-  --color-secondary: #4F46E5;
-  --color-success: #16A34A;
-  --color-warning: #D97706;
-  --color-danger: #DC2626;
-  --color-info: #0284C7;
+  /* Brand — Deep Navy / Emerald / Sky Blue */
+  --color-primary: #1e293b;
+  --color-primary-hover: #0f172a;
+  --color-primary-light: #e2e8f0;
+  --color-accent: #059669;
+  --color-accent-hover: #047857;
+  --color-accent-light: #d1fae5;
+  --color-info: #0ea5e9;
+  --color-info-hover: #0284c7;
+  --color-info-light: #e0f2fe;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
 
-  /* Light theme neutrals */
-  --color-bg: #FAFAFA;
-  --color-surface: #FFFFFF;
-  --color-secondary-bg: #F5F7FA;
-  --color-border: #E5E7EB;
-  --color-text: #111827;
-  --color-muted: #6B7280;
+  /* Aliases — keep existing names working */
+  --color-secondary: #059669;
+
+  /* Light theme neutrals — Warm White */
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-secondary-bg: #f5f5f4;
+  --color-border: #e7e5e4;
+  --color-text: #1c1917;
+  --color-muted: #78716c;
 }
 
-/* Dark mode — redefine the SAME --color-* vars; brand colors unchanged */
+/* Dark mode — deep navy background, brand colors unchanged */
 @layer base {
   html.dark {
-    --color-bg: #0B0F14;
-    --color-surface: #121923;
-    --color-secondary-bg: #182230;
-    --color-border: #273244;
-    --color-text: #F9FAFB;
-    --color-muted: #94A3B8;
+    --color-primary: #e2e8f0;
+    --color-primary-hover: #f1f5f9;
+    --color-primary-light: #334155;
+    --color-accent: #34d399;
+    --color-accent-hover: #6ee7b7;
+    --color-accent-light: #064e3b;
+    --color-info: #38bdf8;
+    --color-info-hover: #7dd3fc;
+    --color-info-light: #0c4a6e;
+    --color-bg: #0c1220;
+    --color-surface: #131c2e;
+    --color-secondary-bg: #1a2540;
+    --color-border: #1e2d44;
+    --color-text: #f1f5f9;
+    --color-muted: #94a3b8;
     color-scheme: dark;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-bg: #0B0F14;
-      --color-surface: #121923;
-      --color-secondary-bg: #182230;
-      --color-border: #273244;
-      --color-text: #F9FAFB;
-      --color-muted: #94A3B8;
+      --color-primary: #e2e8f0;
+      --color-primary-hover: #f1f5f9;
+      --color-primary-light: #334155;
+      --color-accent: #34d399;
+      --color-accent-hover: #6ee7b7;
+      --color-accent-light: #064e3b;
+      --color-info: #38bdf8;
+      --color-info-hover: #7dd3fc;
+      --color-info-light: #0c4a6e;
+      --color-bg: #0c1220;
+      --color-surface: #131c2e;
+      --color-secondary-bg: #1a2540;
+      --color-border: #1e2d44;
+      --color-text: #f1f5f9;
+      --color-muted: #94a3b8;
       color-scheme: dark;
     }
   }
@@ -69,7 +90,7 @@
 }
 
 html {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-geist-sans), "Inter", system-ui, sans-serif;
   scroll-behavior: smooth;
 }
 
@@ -81,22 +102,76 @@ body {
 }
 
 /* Typography scale */
-.text-display { font-size: 2.5rem; font-weight: 700; line-height: 1.1; }
-.text-h1 { font-size: 2rem; font-weight: 600; line-height: 1.2; }
-.text-h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.25; }
-.text-h3 { font-size: 1.25rem; font-weight: 500; line-height: 1.3; }
-.text-body { font-size: 1rem; font-weight: 400; line-height: 1.6; }
-.text-small { font-size: 0.875rem; font-weight: 400; line-height: 1.5; }
-.text-caption { font-size: 0.75rem; font-weight: 400; line-height: 1.4; }
+.text-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.text-h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.text-h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.text-h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.text-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.text-small {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-caption {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
 
 /* Motion tokens */
-*:where(.motion-button) { transition: background-color var(--duration-fast) var(--easing); }
-*:where(.motion-card) { transition: box-shadow var(--duration-normal) var(--easing), transform var(--duration-normal) var(--easing); }
-*:where(.motion-dialog) { transition: opacity var(--duration-slow) var(--easing); }
+*:where(.motion-button) {
+  transition: background-color var(--duration-fast) var(--easing);
+}
+*:where(.motion-card) {
+  transition:
+    box-shadow var(--duration-normal) var(--easing),
+    transform var(--duration-normal) var(--easing);
+}
+*:where(.motion-dialog) {
+  transition: opacity var(--duration-slow) var(--easing);
+}
+*:where(.motion-page) {
+  transition: opacity var(--duration-slow) var(--easing);
+}
+@media (prefers-reduced-motion: no-preference) {
+  *:where(.motion-card:hover) {
+    transform: scale(1.01);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *:where(.motion-card:hover) {
+    transform: none;
+  }
+  *:where(.motion-page) {
+    transition: none;
+  }
+}
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

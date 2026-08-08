@@ -12,3 +12,7 @@ export * from "./components/pagination";
 export * from "./components/empty-state";
 export * from "./components/skeleton";
 export * from "./components/avatar";
+export * from "./components/input";
+export * from "./components/label";
+export * from "./components/textarea";
+export * from "./components/logo";
