@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const apiBase = process.env.API_BASE_URL ?? "http://localhost:3001";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
@@ -8,11 +10,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/auth/:path*",
-        destination: "http://localhost:3001/api/auth/:path*",
+        destination: `${apiBase}/api/auth/:path*`,
       },
       {
         source: "/api/:path*",
-        destination: "http://localhost:3001/:path*",
+        destination: `${apiBase}/:path*`,
       },
     ];
   },

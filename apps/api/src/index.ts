@@ -1,9 +1,3 @@
-import dotenv from "dotenv";
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-dotenv.config({ path: resolve(__dirname, "../../../.env") });
-
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { createDb, patients } from "@canica/db";
@@ -28,11 +22,17 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
 const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
+const trustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean)
+  .concat([baseURL, "http://localhost:3000", "http://localhost:3001"]);
+
 const db = createDb();
 const auth = createAuth({
   db,
   baseURL,
-  trustedOrigins: [baseURL, "http://localhost:3000", "http://localhost:3001"],
+  trustedOrigins,
 });
 
 const app = new Hono<ApiEnv>();

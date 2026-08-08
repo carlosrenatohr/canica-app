@@ -1,3 +1,9 @@
+import dotenv from "dotenv";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+dotenv.config({ path: resolve(__dirname, "../../../.env") });
+
 import { serve } from "@hono/node-server";
 import app from "./index.js";
 
