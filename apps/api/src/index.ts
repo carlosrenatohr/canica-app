@@ -28,16 +28,14 @@ const trustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .filter(Boolean)
   .concat([baseURL, "http://localhost:3000", "http://localhost:3001"]);
 
-const db = createDb();
-const auth = createAuth({
-  db,
-  baseURL,
-  trustedOrigins,
-});
+let db: ReturnType<typeof createDb> | undefined;
+let auth: ReturnType<typeof createAuth> | undefined;
 
 const app = new Hono<ApiEnv>();
 
 app.use("*", (c, next) => {
+  if (!db) db = createDb();
+  if (!auth) auth = createAuth({ db, baseURL, trustedOrigins });
   c.set("db", db);
   c.set("auth", auth);
   c.set("permissions", undefined);
