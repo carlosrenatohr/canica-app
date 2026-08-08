@@ -46,6 +46,7 @@ interface TestUser {
 const TEST_USERS: TestUser[] = [
   { id: "11111111-1111-1111-1111-111111111111", email: "dr.canica@example.com", name: "Dr. Canica", role: "doctor", password: "Doctor123!" },
   { id: "22222222-2222-2222-2222-222222222222", email: "admin.canica@example.com", name: "Admin Canica", role: "administrator", password: "Admin123!" },
+  { id: "33333333-3333-3333-3333-333333333333", email: "superadmin.canica@example.com", name: "Super Admin", role: "superadmin", password: "SuperAdmin123!" },
 ];
 
 async function seed() {
@@ -109,17 +110,17 @@ async function seed() {
       "prescription:read", "prescription:write",
       "appointment:read", "appointment:write",
       "attachment:read", "attachment:write",
-      "audit:read",
     ],
     receptionist: ["patient:read", "appointment:read", "appointment:write"],
-    administrator: [
-      "user:manage", "audit:read", "org:manage",
+    administrator: ["user:manage", "audit:read", "org:manage"],
+    superadmin: [
       "patient:read", "patient:write", "patient:archive",
       "consultation:read", "consultation:write", "consultation:finalize",
       "diagnosis:read", "diagnosis:write",
       "prescription:read", "prescription:write",
       "appointment:read", "appointment:write",
       "attachment:read", "attachment:write",
+      "user:manage", "audit:read", "org:manage",
     ],
   };
 

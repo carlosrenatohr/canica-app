@@ -1,5 +1,6 @@
 // Typed patient repositories with organization scoping.
 // All reads/writes require organization_id to enforce tenant boundaries.
+// Superadmin role bypasses org scoping (passes organizationId = null).
 import { and, eq } from "drizzle-orm";
 import type { Db } from "../db";
 import * as schema from "../schema";
@@ -37,29 +38,41 @@ export async function createPatient(
 
 export async function getPatient(
   db: Db,
-  organizationId: string,
+  organizationId: string | null,
   id: string
 ): Promise<PatientRow | undefined> {
+  const conditions = [eq(schema.patients.id, id)];
+  if (organizationId !== null) {
+    conditions.push(eq(schema.patients.organizationId, organizationId));
+  }
   const [row] = await db
     .select()
     .from(schema.patients)
-    .where(and(eq(schema.patients.id, id), eq(schema.patients.organizationId, organizationId)));
+    .where(and(...conditions));
   return row;
 }
 
-export async function listPatients(db: Db, organizationId: string): Promise<PatientRow[]> {
+export async function listPatients(db: Db, organizationId: string | null): Promise<PatientRow[]> {
+  const conditions = [eq(schema.patients.archived, false)];
+  if (organizationId !== null) {
+    conditions.push(eq(schema.patients.organizationId, organizationId));
+  }
   return db
     .select()
     .from(schema.patients)
-    .where(and(eq(schema.patients.organizationId, organizationId), eq(schema.patients.archived, false)));
+    .where(and(...conditions));
 }
 
 export async function updatePatient(
   db: Db,
-  organizationId: string,
+  organizationId: string | null,
   id: string,
   input: UpdatePatientInput
 ): Promise<PatientRow> {
+  const conditions = [eq(schema.patients.id, id)];
+  if (organizationId !== null) {
+    conditions.push(eq(schema.patients.organizationId, organizationId));
+  }
   const [row] = await db
     .update(schema.patients)
     .set({
@@ -72,14 +85,18 @@ export async function updatePatient(
       email: input.email,
       address: input.address,
     })
-    .where(and(eq(schema.patients.id, id), eq(schema.patients.organizationId, organizationId)))
+    .where(and(...conditions))
     .returning();
   return row;
 }
 
-export async function archivePatient(db: Db, organizationId: string, id: string): Promise<void> {
+export async function archivePatient(db: Db, organizationId: string | null, id: string): Promise<void> {
+  const conditions = [eq(schema.patients.id, id)];
+  if (organizationId !== null) {
+    conditions.push(eq(schema.patients.organizationId, organizationId));
+  }
   await db
     .update(schema.patients)
     .set({ archived: true })
-    .where(and(eq(schema.patients.id, id), eq(schema.patients.organizationId, organizationId)));
+    .where(and(...conditions));
 }

@@ -3,7 +3,7 @@
 // Audit is append-oriented: rows are never soft-updated to hide history.
 import { bigint, boolean, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-export const organizationRole = pgEnum("organization_role", ["doctor", "receptionist", "administrator", "clinic-owner", "specialist", "assistant"]);
+export const organizationRole = pgEnum("organization_role", ["doctor", "receptionist", "administrator", "superadmin", "clinic-owner", "specialist", "assistant"]);
 export const consultationStatus = pgEnum("consultation_status", ["draft", "finalized", "amended"]);
 export const diagnosisStatus = pgEnum("diagnosis_status", ["active", "resolved", "ruled-out"]);
 export const prescriptionStatus = pgEnum("prescription_status", ["active", "cancelled", "completed"]);

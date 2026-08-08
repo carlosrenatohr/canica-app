@@ -44,6 +44,10 @@ app.use("*", (c, next) => {
   return next();
 });
 
+function orgId(c: { var: { actor: { organizationId: string; role: string } } }): string | null {
+  return c.var.actor.role === "superadmin" ? null : c.var.actor.organizationId;
+}
+
 app.all("/api/auth/*", (c) => c.var.auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ ok: true, service: "canica-api" }));
@@ -56,12 +60,12 @@ app.get("/me", sessionMiddleware(), (c) => {
 app.use("/patients/*", sessionMiddleware());
 
 app.get("/patients", requirePermission(Permission.PATIENT_READ), async (c) => {
-  const patients = await patientsRepo.listPatients(c.var.db, c.var.actor.organizationId);
+  const patients = await patientsRepo.listPatients(c.var.db, orgId(c));
   return c.json({ data: patients });
 });
 
 app.get("/patients/:id", requirePermission(Permission.PATIENT_READ), async (c) => {
-  const patient = await patientsRepo.getPatient(c.var.db, c.var.actor.organizationId, c.req.param("id"));
+  const patient = await patientsRepo.getPatient(c.var.db, orgId(c), c.req.param("id"));
   if (!patient) return c.json({ error: "not_found" }, 404);
   return c.json({ data: patient });
 });
@@ -70,7 +74,7 @@ app.post("/patients", requirePermission(Permission.PATIENT_WRITE), async (c) => 
   const body = await c.req.json().catch(() => null);
   const parsed = CreatePatientInput.safeParse(body);
   if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
-  const patient = await patientsRepo.createPatient(c.var.db, c.var.actor.organizationId, parsed.data);
+  const patient = await patientsRepo.createPatient(c.var.db, orgId(c)!, parsed.data);
   await writeAudit(c.var.db, {
     organizationId: c.var.actor.organizationId,
     actorId: c.var.actor.userId,
@@ -87,7 +91,7 @@ app.patch("/patients/:id", requirePermission(Permission.PATIENT_WRITE), async (c
   const body = await c.req.json().catch(() => null);
   const parsed = UpdatePatientInput.safeParse(body);
   if (!parsed.success) return c.json({ error: "validation_failed", details: parsed.error.flatten() }, 400);
-  const patient = await patientsRepo.updatePatient(c.var.db, c.var.actor.organizationId, c.req.param("id"), parsed.data);
+  const patient = await patientsRepo.updatePatient(c.var.db, orgId(c), c.req.param("id"), parsed.data);
   if (!patient) return c.json({ error: "not_found" }, 404);
   await writeAudit(c.var.db, {
     organizationId: c.var.actor.organizationId,
@@ -102,7 +106,7 @@ app.patch("/patients/:id", requirePermission(Permission.PATIENT_WRITE), async (c
 });
 
 app.delete("/patients/:id", requirePermission(Permission.PATIENT_ARCHIVE), async (c) => {
-  await patientsRepo.archivePatient(c.var.db, c.var.actor.organizationId, c.req.param("id"));
+  await patientsRepo.archivePatient(c.var.db, orgId(c), c.req.param("id"));
   await writeAudit(c.var.db, {
     organizationId: c.var.actor.organizationId,
     actorId: c.var.actor.userId,
