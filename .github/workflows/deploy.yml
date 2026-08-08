@@ -35,11 +35,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
         working-directory: .
       - name: Prepare DATABASE_URL secrets file
-        if: secrets.DATABASE_URL != ''
         env:
           DB_VALUE: ${{ secrets.DATABASE_URL }}
         working-directory: .
-        run: printf 'DATABASE_URL=%s\n' "${DB_VALUE}" > apps/api/secrets.env
+        run: |
+          if [ -n "${DB_VALUE}" ]; then
+            printf 'DATABASE_URL=%s\n' "${DB_VALUE}" > apps/api/secrets.env
+          fi
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
