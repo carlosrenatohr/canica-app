@@ -15,6 +15,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { FileText, Calendar } from "lucide-react";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
+import { apiFetch } from "@/lib/api";
 
 interface Consultation {
   id: string;
@@ -63,8 +64,8 @@ export default function ConsultationListPage({
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch(`/api/patients/${id}`).then((res) => res.json()),
-      fetch(`/api/consultations?patientId=${id}`).then((res) => {
+      apiFetch(`/api/patients/${id}`).then((res) => res.json()),
+      apiFetch(`/api/consultations?patientId=${id}`).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       }),

@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
+import { apiFetch } from "@/lib/api";
 
 interface TimelineEntry {
   type: "consultation" | "diagnosis" | "prescription" | "attachment";
@@ -97,8 +98,8 @@ export default function TimelinePage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch(`/api/patients/${id}`).then((r) => r.json()),
-      fetch(`/api/patients/${id}/timeline`).then((r) => {
+      apiFetch(`/api/patients/${id}`).then((r) => r.json()),
+      apiFetch(`/api/patients/${id}/timeline`).then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       }),

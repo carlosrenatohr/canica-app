@@ -81,7 +81,7 @@ export default function ConsultationsListPage() {
     ];
     Promise.all(
       uniquePatientIds.map((id) =>
-        fetch(`/api/patients/${id}`).then((r) => r.json()),
+        apiFetch(`/api/patients/${id}`).then((r) => r.json()),
       ),
     ).then((results) => {
       uniquePatientIds.forEach((id, i) => {

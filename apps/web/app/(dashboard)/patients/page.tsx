@@ -58,7 +58,7 @@ export default function PatientsPage() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Archivar a ${name}?`)) return;
-    const res = await fetch(`/api/patients/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/patients/${id}`, { method: "DELETE" });
     if (res.ok) {
       setPatients((prev) => prev.filter((p) => p.id !== id));
     }

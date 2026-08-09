@@ -20,6 +20,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Download, FileText } from "lucide-react";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
+import { apiFetch } from "@/lib/api";
 
 interface Consultation {
   id: string;
@@ -112,13 +113,13 @@ export default function ConsultationDetailPage({
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch(`/api/consultations/${consultationId}`).then((r) =>
+      apiFetch(`/api/consultations/${consultationId}`).then((r) =>
         r.json(),
       ),
-      fetch(`/api/consultations/${consultationId}/diagnoses`).then((r) =>
+      apiFetch(`/api/consultations/${consultationId}/diagnoses`).then((r) =>
         r.json(),
       ),
-      fetch(`/api/consultations/${consultationId}/prescriptions`).then(
+      apiFetch(`/api/consultations/${consultationId}/prescriptions`).then(
         (r) => r.json(),
       ),
     ])

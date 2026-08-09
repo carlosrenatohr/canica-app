@@ -25,6 +25,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
+import { apiFetch } from "@/lib/api";
 
 interface AuditLog {
   id: string;
@@ -97,7 +98,7 @@ export default function AuditLogPage() {
     const params = new URLSearchParams();
     if (actionFilter) params.set("action", actionFilter);
     if (entityFilter) params.set("targetEntity", entityFilter);
-    fetch(`/api/audit?${params.toString()}`)
+    apiFetch(`/api/audit?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
