@@ -80,6 +80,7 @@ jobs:
       - name: Build OpenNext bundle
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
+          NEXT_PUBLIC_API_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
         run: pnpm build:worker
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
