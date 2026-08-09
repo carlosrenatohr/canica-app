@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function NewPatientPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await fetch(apiUrl("/api/patients"), {
+    const res = await apiFetch("/api/patients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

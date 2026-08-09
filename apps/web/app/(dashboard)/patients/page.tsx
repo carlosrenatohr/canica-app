@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import {
   Button,
   Input,
@@ -41,7 +41,7 @@ export default function PatientsPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch(apiUrl("/api/patients"))
+    apiFetch("/api/patients")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import {
   Button,
   Badge,
@@ -59,7 +59,7 @@ export default function ConsultationsListPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch(apiUrl("/api/consultations"))
+    apiFetch("/api/consultations")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
