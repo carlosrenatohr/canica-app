@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiUrl } from "@/lib/api";
 import {
   Button,
   Input,
@@ -27,7 +28,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/auth/sign-up/email", {
+    const res = await fetch(apiUrl("/api/auth/sign-up/email"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

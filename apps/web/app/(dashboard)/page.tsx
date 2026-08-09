@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/api";
 import {
   Button,
   Skeleton,
@@ -34,13 +35,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!session) return;
     Promise.all([
-      fetch("/api/patients")
+      fetch(apiUrl("/api/patients"))
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
-      fetch("/api/appointments")
+      fetch(apiUrl("/api/appointments"))
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
-      fetch("/api/consultations")
+      fetch(apiUrl("/api/consultations"))
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
     ]).then(([p, a, c]) => {

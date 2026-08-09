@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { apiUrl } from "@/lib/api";
 import {
   Button,
   Input,
@@ -53,7 +54,7 @@ export default function NewConsultationPage({
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/consultations", {
+    const res = await fetch(apiUrl("/api/consultations"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

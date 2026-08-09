@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiUrl } from "@/lib/api";
 import {
   Button,
   Input,
@@ -41,7 +42,7 @@ export default function NewAppointmentPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch("/api/patients")
+    fetch(apiUrl("/api/patients"))
       .then((r) => r.json())
       .then((data) =>
         setPatients(data.data.filter((p: Patient) => !p.archived)),
@@ -63,7 +64,7 @@ export default function NewAppointmentPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/appointments", {
+    const res = await fetch(apiUrl("/api/appointments"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
