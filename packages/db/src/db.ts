@@ -3,7 +3,11 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
-export function createDb(url: string = process.env.DATABASE_URL ?? ""): ReturnType<typeof drizzle<typeof schema>> {
+type DbInstance = ReturnType<typeof drizzle<typeof schema>>;
+
+const closers = new WeakMap<object, () => Promise<void>>();
+
+export function createDb(url: string = process.env.DATABASE_URL ?? ""): DbInstance {
   const client = postgres(url, {
     max: 5,
     prepare: false,
@@ -11,7 +15,15 @@ export function createDb(url: string = process.env.DATABASE_URL ?? ""): ReturnTy
     idle_timeout: 20,
     max_lifetime: 300,
   });
-  return drizzle(client, { schema });
+  const db = drizzle(client, { schema });
+  closers.set(db, () => client.end({ timeout: 1 }));
+  return db;
 }
 
-export type Db = ReturnType<typeof createDb>;
+export async function closeDb(db: DbInstance): Promise<void> {
+  const close = closers.get(db);
+  closers.delete(db);
+  await close?.();
+}
+
+export type Db = DbInstance;

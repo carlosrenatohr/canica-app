@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
-import { createDb, patients } from "@canica/db";
+import { closeDb, createDb, patients } from "@canica/db";
 import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
 import * as consultationsRepo from "@canica/db/repos/consultations";
@@ -29,25 +29,24 @@ const trustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .filter(Boolean)
   .concat([baseURL, "http://localhost:3000", "http://localhost:3001"]);
 
-let db: ReturnType<typeof createDb> | undefined;
-let auth: ReturnType<typeof createAuth> | undefined;
-
 const app = new Hono<ApiEnv>();
 
 app.use("*", async (c, next) => {
-  if (!db) {
-    db = createDb();
-    try {
-      await db.execute(sql`SELECT 1`);
-    } catch (e: any) {
-      console.error("DB warmup failed:", e?.message ?? e);
-    }
+  const db = createDb();
+  try {
+    await db.execute(sql`SELECT 1`);
+  } catch (e: any) {
+    console.error("DB warmup failed:", e?.message ?? e);
   }
-  if (!auth) auth = createAuth({ db, baseURL, trustedOrigins });
+  const auth = createAuth({ db, baseURL, trustedOrigins });
   c.set("db", db);
   c.set("auth", auth);
   c.set("permissions", undefined);
-  return next();
+  try {
+    return await next();
+  } finally {
+    await closeDb(db);
+  }
 });
 
 app.use("*", async (c, next) => {
@@ -93,8 +92,7 @@ app.get("/health", (c) => c.json({ ok: true, service: "canica-api" }));
 
 app.get("/debug/db", async (c) => {
   try {
-    if (!db) db = createDb();
-    const rows = await db.execute(sql<{ now: unknown }>`SELECT now() as now`);
+    const rows = await c.get("db").execute(sql<{ now: unknown }>`SELECT now() as now`);
     return c.json({ ok: true, now: rows?.[0]?.now });
   } catch (e: any) {
     return c.json({ ok: false, error: e?.message ?? String(e), cause: e?.cause?.message }, 500);
