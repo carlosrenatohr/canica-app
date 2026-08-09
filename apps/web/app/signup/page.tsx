@@ -30,6 +30,7 @@ export default function SignupPage() {
     setLoading(true);
     const res = await fetch(apiUrl("/api/auth/sign-up/email"), {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
