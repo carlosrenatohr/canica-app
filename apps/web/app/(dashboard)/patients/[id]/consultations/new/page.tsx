@@ -36,7 +36,7 @@ export default function NewConsultationPage({
 
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${id}`)
+    apiFetch(`/api/patients/${id}`)
       .then((res) => res.json())
       .then((data) => setPatient(data.data))
       .catch(() => {});

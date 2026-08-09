@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
+import { apiFetch } from "@/lib/api";
 
 interface Patient {
   id: string;
@@ -74,7 +75,7 @@ export default function PatientDetailPage({
 
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${id}`)
+    apiFetch(`/api/patients/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -308,7 +309,7 @@ export default function PatientDetailPage({
             variant="outline"
             onClick={async () => {
               if (!confirm("¿Archivar este paciente?")) return;
-              const res = await fetch(`/api/patients/${patient.id}`, {
+              const res = await apiFetch(`/api/patients/${patient.id}`, {
                 method: "DELETE",
               });
               if (res.ok) router.push("/patients");

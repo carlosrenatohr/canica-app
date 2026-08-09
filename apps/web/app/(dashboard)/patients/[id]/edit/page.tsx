@@ -8,6 +8,7 @@ import {
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
 interface Patient {
   id: string;
@@ -36,7 +37,7 @@ export default function EditPatientPage({
 
   useEffect(() => {
     if (!session) return;
-    fetch(`/api/patients/${id}`)
+    apiFetch(`/api/patients/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -67,7 +68,7 @@ export default function EditPatientPage({
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    const res = await fetch(`/api/patients/${patient.id}`, {
+      const res = await apiFetch(`/api/patients/${patient.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
