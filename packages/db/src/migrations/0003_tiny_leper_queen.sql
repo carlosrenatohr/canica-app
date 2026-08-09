@@ -1,0 +1,1 @@
+ALTER TYPE "public"."organization_role" ADD VALUE 'superadmin' BEFORE 'clinic-owner';

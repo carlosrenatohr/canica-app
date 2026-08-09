@@ -3,7 +3,9 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@canica/ui": ["../../packages/ui/src/index.ts"],
+      "@canica/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "app"]

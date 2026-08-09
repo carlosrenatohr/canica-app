@@ -1,22 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, useMemo } from "react";
+import {
+  Button,
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+  EmptyState,
+} from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { CalendarDays, Clock, User } from "lucide-react";
+import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface Patient {
   id: string;
   firstName: string;
   lastName: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
 }
 
 interface Appointment {
@@ -25,11 +28,15 @@ interface Appointment {
   providerId: string;
   startDate: string;
   endDate?: string | null;
-  status: "scheduled" | "confirmed" | "checked-in" | "completed" | "cancelled" | "no-show";
+  status:
+    | "scheduled"
+    | "confirmed"
+    | "checked-in"
+    | "completed"
+    | "cancelled"
+    | "no-show";
   reason?: string | null;
-  notes?: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
 const statusLabels: Record<Appointment["status"], string> = {
@@ -41,23 +48,38 @@ const statusLabels: Record<Appointment["status"], string> = {
   "no-show": "No asistió",
 };
 
-const statusColors: Record<Appointment["status"], string> = {
-  scheduled: "bg-blue-100 text-blue-800",
-  confirmed: "bg-indigo-100 text-indigo-800",
-  "checked-in": "bg-orange-100 text-orange-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  "no-show": "bg-gray-100 text-gray-800",
-};
+function statusVariant(
+  status: Appointment["status"],
+): "default" | "success" | "warning" | "danger" | "neutral" {
+  if (status === "completed") return "success";
+  if (status === "confirmed" || status === "checked-in") return "warning";
+  if (status === "cancelled" || status === "no-show") return "danger";
+  return "neutral";
+}
+
+function groupByDate(
+  appointments: Appointment[],
+): Record<string, Appointment[]> {
+  return appointments.reduce(
+    (acc, a) => {
+      const date = new Date(a.startDate).toISOString().split("T")[0] ?? "otros";
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(a);
+      return acc;
+    },
+    {} as Record<string, Appointment[]>,
+  );
+}
 
 export default function AppointmentsPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
-  const [providers, setProviders] = useState<Record<string, User>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useSafePageTitle("Citas");
 
   useEffect(() => {
     if (!session) return;
@@ -67,82 +89,194 @@ export default function AppointmentsPage() {
         return res.json();
       })
       .then((data) => {
-        setAppointments(data.data);
+        setAppointments(data.data ?? []);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
   }, [session]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || appointments.length === 0) return;
     const uniquePatientIds = [...new Set(appointments.map((a) => a.patientId))];
-    const uniqueProviderIds = [...new Set(appointments.map((a) => a.providerId))];
-    Promise.all([
-      ...uniquePatientIds.map((id) => fetch(`/api/patients/${id}`).then((r) => r.json())),
-      ...uniqueProviderIds.map((id) => fetch(`/api/me`).then((r) => r.json())),
-    ]).then((results) => {
-      const patientResults = results.slice(0, uniquePatientIds.length);
-      patientResults.forEach((r, i) => {
-        if (r.data) setPatients((p) => ({ ...p, [uniquePatientIds[i]]: r.data }));
+    Promise.all(
+      uniquePatientIds.map((id) =>
+        fetch(`/api/patients/${id}`).then((r) => r.json()),
+      ),
+    ).then((results) => {
+      uniquePatientIds.forEach((id, i) => {
+        if (results[i]?.data) {
+          setPatients((p) => ({ ...p, [id]: results[i].data }));
+        }
       });
     });
   }, [session, appointments]);
 
   if (!session) {
     return (
-      <div className="p-8">
-        <p>Debes iniciar sesión para ver las citas.</p>
-      </div>
+      <main className="p-8">
+        <p className="text-muted-foreground">
+          Debes iniciar sesión para ver las citas.
+        </p>
+      </main>
     );
   }
 
-  if (loading) return <div className="p-8">Cargando citas…</div>;
-  if (error) return <div className="p-8">Error: {error}</div>;
+  const today = new Date().toISOString().split("T")[0];
+  const grouped = useMemo(() => groupByDate(appointments), [appointments]);
+  const upcoming = Object.keys(grouped).filter((d) => d >= (today ?? ""));
+  const past = Object.keys(grouped).filter((d) => d < (today ?? ""));
+
+  if (loading) {
+    return (
+      <main className="p-8 space-y-6 max-w-5xl">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="p-8">
+        <p className="text-danger">Error: {error}</p>
+      </main>
+    );
+  }
+
+  const renderGroup = (
+    dateLabel: string,
+    date: string,
+    items: Appointment[],
+  ) => (
+    <Card key={date} variant="elevated" className="mb-4">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-small text-muted-foreground">
+          {dateLabel}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {items.map((a) => {
+          const p = patients[a.patientId];
+          const start = new Date(a.startDate);
+          const end = a.endDate ? new Date(a.endDate) : null;
+          return (
+            <Card
+              key={a.id}
+              variant="interactive"
+              className="motion-card p-4"
+              onClick={() => router.push(`/appointments/${a.id}`)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                    <CalendarDays className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="font-medium">
+                      {start.toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      {end &&
+                        ` – ${end.toLocaleTimeString("es-ES", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`}
+                    </p>
+                    <p className="text-h3">
+                      {p?.firstName || ""} {p?.lastName || "Paciente"}
+                    </p>
+                    {a.reason && (
+                      <p className="text-small text-muted line-clamp-1">
+                        {a.reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 self-start">
+                  <Clock className="h-4 w-4 text-muted" />
+                  <Badge variant={statusVariant(a.status)} className="text-xs">
+                    {statusLabels[a.status]}
+                  </Badge>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Citas</h1>
-        <Button onClick={() => router.push("/appointments/new")}>Nueva cita</Button>
+    <main className="p-8 space-y-6 max-w-5xl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-display font-semibold text-primary">Citas</h1>
+        <Button onClick={() => router.push("/appointments/new")}>
+          Nueva cita
+        </Button>
       </div>
+
       {appointments.length === 0 ? (
-        <p className="text-muted-foreground">No hay citas programadas.</p>
+        <EmptyState
+          title="Sin citas"
+          description="Aún no hay citas programadas."
+          icon={<CalendarDays className="h-10 w-10" />}
+          actionLabel="Crear primera cita"
+          onAction={() => router.push("/appointments/new")}
+        />
       ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="text-left py-2">Fecha</th>
-              <th className="text-left py-2">Paciente</th>
-              <th className="text-left py-2">Estado</th>
-              <th className="text-left py-2">Razón</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((a) => {
-              const patient = patients[a.patientId];
-              return (
-                <tr key={a.id} className="border-t">
-                  <td className="py-2">
-                    {new Date(a.startDate).toLocaleString("es-ES")}
-                  </td>
-                  <td className="py-2">
-                    {patient ? `${patient.firstName} ${patient.lastName}` : a.patientId}
-                  </td>
-                  <td className="py-2">
-                    <span className={`px-2 py-1 rounded text-xs ${statusColors[a.status]}`}>
-                      {statusLabels[a.status]}
-                    </span>
-                  </td>
-                  <td className="py-2">{a.reason || "-"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div>
+          {upcoming.length > 0 && (
+            <>
+              <h2 className="mb-2 text-h3 font-medium text-primary">
+                Próximas
+              </h2>
+              {upcoming.map((d) =>
+                renderGroup(
+                  d === today
+                    ? "Hoy"
+                    : new Date(d).toLocaleDateString("es-ES", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }),
+                  d,
+                  grouped[d]!,
+                ),
+              )}
+            </>
+          )}
+          {past.length > 0 && (
+            <>
+              <h2 className="mb-2 mt-4 text-h3 font-medium text-primary">
+                Anteriores
+              </h2>
+              {past.map((d) =>
+                renderGroup(
+                  new Date(d).toLocaleDateString("es-ES", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }),
+                  d,
+                  grouped[d]!,
+                ),
+              )}
+            </>
+          )}
+        </div>
       )}
-    </div>
+    </main>
   );
 }

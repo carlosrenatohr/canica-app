@@ -1,10 +1,8 @@
 name: Deploy to Cloudflare
 
 # canica-app is a pnpm monorepo: apps/api (Hono Worker) + apps/web (Next.js via OpenNext).
-# On every push to main this workflow deploys apps/api to Cloudflare using the same
+# On every push to main this workflow builds and deploys BOTH to Cloudflare using the same
 # account (Honchkrow1995 / b91df20a84a77a2eda9dcc47a7bead73) as hit & rana.
-# The web job is disabled until main's app code (uncommitted WIP) is complete; the API
-# needs no build so it can ship independently.
 #
 # Requires repo secrets: CLOUDFLARE_API_TOKEN (token with "Workers Scripts: Edit" on the
 # account above) and DATABASE_URL (postgres connection string, required secret of the worker).
@@ -63,3 +61,30 @@ jobs:
             sleep 5
           done
           echo "Health check failed after retries."; exit 1
+
+  web:
+    name: Deploy Web Worker (apps/web, OpenNext)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        working-directory: .
+      - name: Build OpenNext bundle
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
+        run: pnpm build:worker
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.ACCOUNT_ID }}
+          workingDirectory: apps/web
+          command: deploy --minify

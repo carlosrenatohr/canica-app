@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
+import { Button } from "@canica/ui";
 import Link from "next/link";
 
 export default function HomePage() {

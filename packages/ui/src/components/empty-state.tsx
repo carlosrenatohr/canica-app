@@ -3,16 +3,15 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
-  icon?: React.ElementType;
+  icon?: React.ReactNode;
 }
 
 import { forwardRef } from "react";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
-import { FileText } from "lucide-react";
 
 const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
-  ({ className, title, description, actionLabel, onAction, icon: Icon = FileText, ...props }, ref) => (
+  ({ className, title, description, actionLabel, onAction, icon, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
@@ -21,9 +20,11 @@ const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
       )}
       {...props}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10">
-        <Icon className="h-6 w-6 text-secondary" />
-      </div>
+      {icon && (
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10">
+          {icon}
+        </div>
+      )}
       <h3 className="text-h3 font-semibold">{title}</h3>
       {description && (
         <p className="text-small text-muted max-w-sm">{description}</p>
