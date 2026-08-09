@@ -36,7 +36,7 @@ const app = new Hono<ApiEnv>();
 
 app.use("*", async (c, next) => {
   if (!db) {
-    db = createDb(c.env.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL ?? "");
+    db = createDb();
     try {
       await db.execute(sql`SELECT 1`);
     } catch (e: any) {
@@ -93,7 +93,7 @@ app.get("/health", (c) => c.json({ ok: true, service: "canica-api" }));
 
 app.get("/debug/db", async (c) => {
   try {
-    if (!db) db = createDb(c.env.HYPERDRIVE?.connectionString ?? process.env.DATABASE_URL ?? "");
+    if (!db) db = createDb();
     const rows = await db.execute(sql<{ now: unknown }>`SELECT now() as now`);
     return c.json({ ok: true, now: rows?.[0]?.now });
   } catch (e: any) {
