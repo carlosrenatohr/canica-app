@@ -25,6 +25,13 @@
   --color-border: #e7e5e4;
   --color-text: #1c1917;
   --color-muted: #78716c;
+
+  /* Semantic button colors (always readable in both modes) */
+  --color-button-bg: #1e293b;
+  --color-button-bg-hover: #0f172a;
+  --color-button-text: #ffffff;
+  --color-button-secondary-text: #ffffff;
+  --color-button-outline-bg: #ffffff;
 }
 
 /* Dark mode — deep navy background, brand colors unchanged */
@@ -46,6 +53,13 @@
     --color-text: #f1f5f9;
     --color-muted: #94a3b8;
     color-scheme: dark;
+
+    /* button text/ bg in dark mode for readability */
+    --color-button-bg: #334155;
+    --color-button-bg-hover: #475569;
+    --color-button-text: #f8fafc;
+    --color-button-secondary-text: #0f172a;
+    --color-button-outline-bg: #0f172a;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -66,6 +80,12 @@
       --color-text: #f1f5f9;
       --color-muted: #94a3b8;
       color-scheme: dark;
+
+      --color-button-bg: #334155;
+      --color-button-bg-hover: #475569;
+      --color-button-text: #f8fafc;
+      --color-button-secondary-text: #0f172a;
+      --color-button-outline-bg: #0f172a;
     }
   }
 }
@@ -175,5 +195,39 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Explicit button colors (always visible in light & dark).
+   Defined here so they ship in the CSS regardless of Tailwind content
+   scanning across the monorepo packages. */
+@layer components {
+  .btn-primary {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-button-bg-hover);
+  }
+  .btn-secondary {
+    background-color: var(--color-accent);
+    color: var(--color-button-secondary-text);
+  }
+  .btn-secondary:hover {
+    opacity: 0.9;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-text);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-accent, #059669) / 0.05;
+  }
+  .btn-danger {
+    background-color: var(--color-danger);
+    color: var(--color-button-text);
+  }
+  .btn-danger:hover {
+    opacity: 0.9;
   }
 }
