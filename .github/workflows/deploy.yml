@@ -46,7 +46,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.ACCOUNT_ID }}
           workingDirectory: apps/api
-          command: deploy --minify ${{ secrets.DATABASE_URL != '' && '--secrets-file secrets.env' || '' }}
+          command: deploy ${{ secrets.DATABASE_URL != '' && '--secrets-file secrets.env' || '' }}
       - name: Clean up secrets file
         if: always()
         working-directory: .
