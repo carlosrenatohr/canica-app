@@ -16,7 +16,17 @@ export interface ApiEnv {
 export function sessionMiddleware(): MiddlewareHandler<ApiEnv> {
   return async (c, next) => {
     const auth = c.get("auth");
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    let session;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        session = await auth.api.getSession({ headers: c.req.raw.headers });
+        break;
+      } catch (e) {
+        if (attempt >= 2) throw e;
+        console.error("getSession failed (retry):", (e as Error).message);
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    }
     const actor = actorFromSession(session);
     if (!actor) return c.json({ error: "unauthorized" }, 401);
     c.set("actor", actor);

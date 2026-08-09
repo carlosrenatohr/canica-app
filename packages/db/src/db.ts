@@ -4,7 +4,12 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
 export function createDb(url: string = process.env.DATABASE_URL ?? ""): ReturnType<typeof drizzle<typeof schema>> {
-  const client = postgres(url, { max: 10 });
+  const client = postgres(url, {
+    max: 5,
+    connect_timeout: 10,
+    idle_timeout: 20,
+    max_lifetime: 300,
+  });
   return drizzle(client, { schema });
 }
 
