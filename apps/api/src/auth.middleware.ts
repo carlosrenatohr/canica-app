@@ -5,6 +5,9 @@ import { getPermissionsForRole } from "@canica/db/repos/permissions";
 import type { PermissionKey } from "@canica/db/repos/permissions";
 
 export interface ApiEnv {
+  Bindings: {
+    HYPERDRIVE?: { connectionString: string };
+  };
   Variables: {
     db: Db;
     auth: Auth;
