@@ -6,6 +6,7 @@ import * as schema from "./schema";
 export function createDb(url: string = process.env.DATABASE_URL ?? ""): ReturnType<typeof drizzle<typeof schema>> {
   const client = postgres(url, {
     max: 5,
+    prepare: false,
     connect_timeout: 10,
     idle_timeout: 20,
     max_lifetime: 300,
