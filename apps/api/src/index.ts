@@ -19,6 +19,7 @@ import {
   UpdateAppointmentStatusInput,
 } from "@canica/validation";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import { sql } from "drizzle-orm";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
 const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
@@ -69,6 +70,16 @@ function orgId(c: { var: { actor: { organizationId: string; role: string } } }):
 app.all("/api/auth/*", (c) => c.var.auth.handler(c.req.raw));
 
 app.get("/health", (c) => c.json({ ok: true, service: "canica-api" }));
+
+app.get("/debug/db", async (c) => {
+  try {
+    if (!db) db = createDb();
+    const rows = await db.execute(sql<{ now: unknown }>`SELECT now() as now`);
+    return c.json({ ok: true, now: rows?.[0]?.now });
+  } catch (e: any) {
+    return c.json({ ok: false, error: e?.message ?? String(e), cause: e?.cause?.message }, 500);
+  }
+});
 
 app.get("/me", sessionMiddleware(), (c) => {
   const actor = c.get("actor");
@@ -439,6 +450,12 @@ app.get("/audit", requirePermission(Permission.AUDIT_READ), async (c) => {
     toDate: c.req.query("toDate") ?? undefined,
   });
   return c.json({ data: logs });
+});
+
+app.onError((err, c) => {
+  console.error("UNHANDLED", String(err), err?.stack);
+  const msg = err?.message ?? "Internal Server Error";
+  return c.json({ error: msg, stack: err?.stack?.split("\n").slice(1, 4).join("\n") }, 500);
 });
 
 export default app;
