@@ -8,3 +8,10 @@ export function apiUrl(path: string) {
   const apiPath = p.startsWith("/api/auth/") ? p : p.replace(/^\/api(?=\/)/, "");
   return `${apiBase}${apiPath}`;
 }
+
+export function apiFetch(path: string, init?: RequestInit) {
+  return fetch(apiUrl(path), {
+    ...init,
+    credentials: "include",
+  });
+}
