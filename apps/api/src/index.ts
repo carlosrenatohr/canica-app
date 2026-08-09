@@ -42,6 +42,26 @@ app.use("*", (c, next) => {
   return next();
 });
 
+app.use("*", async (c, next) => {
+  const origin = c.req.header("origin");
+  if (c.req.method === "OPTIONS") {
+    if (origin && trustedOrigins.includes(origin)) {
+      c.header("Access-Control-Allow-Origin", origin);
+      c.header("Access-Control-Allow-Credentials", "true");
+      c.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      c.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Cookie");
+      c.header("Access-Control-Max-Age", "600");
+    }
+    return c.body(null, 204);
+  }
+  await next();
+  if (origin && trustedOrigins.includes(origin)) {
+    c.header("Access-Control-Allow-Origin", origin);
+    c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Vary", "Origin");
+  }
+});
+
 function orgId(c: { var: { actor: { organizationId: string; role: string } } }): string | null {
   return c.var.actor.role === "superadmin" ? null : c.var.actor.organizationId;
 }
