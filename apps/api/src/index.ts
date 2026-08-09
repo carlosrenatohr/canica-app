@@ -34,8 +34,15 @@ let auth: ReturnType<typeof createAuth> | undefined;
 
 const app = new Hono<ApiEnv>();
 
-app.use("*", (c, next) => {
-  if (!db) db = createDb();
+app.use("*", async (c, next) => {
+  if (!db) {
+    db = createDb();
+    try {
+      await db.execute(sql`SELECT 1`);
+    } catch (e: any) {
+      console.error("DB warmup failed:", e?.message ?? e);
+    }
+  }
   if (!auth) auth = createAuth({ db, baseURL, trustedOrigins });
   c.set("db", db);
   c.set("auth", auth);
@@ -67,7 +74,20 @@ function orgId(c: { var: { actor: { organizationId: string; role: string } } }):
   return c.var.actor.role === "superadmin" ? null : c.var.actor.organizationId;
 }
 
-app.all("/api/auth/*", (c) => c.var.auth.handler(c.req.raw));
+app.all("/api/auth/*", async (c) => {
+  try {
+    return await c.var.auth.handler(c.req.raw);
+  } catch (e: any) {
+    console.error("AUTH try-1 failed:", e?.message ?? e);
+    await new Promise((r) => setTimeout(r, 300));
+    try {
+      return await c.var.auth.handler(c.req.raw);
+    } catch (e2: any) {
+      console.error("AUTH try-2 failed:", e2?.message ?? e2);
+      throw e2;
+    }
+  }
+});
 
 app.get("/health", (c) => c.json({ ok: true, service: "canica-api" }));
 
