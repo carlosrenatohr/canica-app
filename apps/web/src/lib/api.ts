@@ -4,5 +4,7 @@ export const apiBase =
 
 export function apiUrl(path: string) {
   const p = path.startsWith("/") ? path : `/${path}`;
-  return apiBase ? `${apiBase}${p}` : p;
+  if (!apiBase) return p;
+  const apiPath = p.startsWith("/api/auth/") ? p : p.replace(/^\/api(?=\/)/, "");
+  return `${apiBase}${apiPath}`;
 }
