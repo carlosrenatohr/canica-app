@@ -33,11 +33,6 @@ const app = new Hono<ApiEnv>();
 
 app.use("*", async (c, next) => {
   const db = createDb();
-  try {
-    await db.execute(sql`SELECT 1`);
-  } catch (e: any) {
-    console.error("DB warmup failed:", e?.message ?? e);
-  }
   const auth = createAuth({ db, baseURL, trustedOrigins });
   c.set("db", db);
   c.set("auth", auth);

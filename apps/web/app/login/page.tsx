@@ -85,6 +85,11 @@ export default function LoginPage() {
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Ingresando…" : "Entrar"}
             </Button>
+            {loading && (
+              <p role="status" aria-live="polite" className="text-center text-small text-muted">
+                Verificando tus credenciales…
+              </p>
+            )}
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
