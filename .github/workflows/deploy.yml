@@ -53,7 +53,7 @@ jobs:
         run: rm -f apps/api/secrets.env
       - name: Health check
         run: |
-          BASE="${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}"
+          BASE="${{ vars.API_BASE_URL || 'https://canica-api.nativerse.workers.dev' }}"
           for i in $(seq 1 12); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/health")
             echo "attempt $i: /health -> $code"
@@ -79,8 +79,8 @@ jobs:
         working-directory: .
       - name: Build OpenNext bundle
         env:
-          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
-          NEXT_PUBLIC_API_URL: ${{ vars.API_BASE_URL || 'https://canica-api.honchkrow1995.workers.dev' }}
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://canica-api.nativerse.workers.dev' }}
+          NEXT_PUBLIC_API_URL: ${{ vars.API_BASE_URL || 'https://canica-api.nativerse.workers.dev' }}
         run: pnpm build:worker
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3

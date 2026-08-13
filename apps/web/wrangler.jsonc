@@ -13,6 +13,6 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "API_BASE_URL": "https://canica-api.honchkrow1995.workers.dev"
+    "API_BASE_URL": "https://canica-api.nativerse.workers.dev"
   }
 }
