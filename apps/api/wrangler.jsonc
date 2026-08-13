@@ -9,8 +9,8 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "API_BASE_URL": "https://canica-api.honchkrow1995.workers.dev",
-    "TRUSTED_ORIGINS": "https://canica.honchkrow1995.workers.dev,http://localhost:3000,http://localhost:3001"
+    "API_BASE_URL": "https://canica-api.nativerse.workers.dev",
+    "TRUSTED_ORIGINS": "https://canica.nativerse.workers.dev,http://localhost:3000,http://localhost:3001"
   },
   "secrets": {
     "required": ["DATABASE_URL"]
