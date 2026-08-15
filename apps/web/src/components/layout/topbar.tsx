@@ -15,6 +15,7 @@ export function Topbar() {
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user as
     | { role?: string; name?: string | null; email?: string | null }
@@ -35,15 +36,50 @@ export function Topbar() {
         setMenuOpen(false);
       }
     };
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+
+      const menuItems = menuRef.current?.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]',
+      );
+      if (!menuItems || menuItems.length === 0) return;
+
+      const currentIndex = Array.from(menuItems).indexOf(
+        document.activeElement as HTMLElement,
+      );
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        const next = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
+        menuItems[next].focus();
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        const prev = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+        menuItems[prev].focus();
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        menuItems[0].focus();
+      } else if (event.key === "End") {
+        event.preventDefault();
+        menuItems[menuItems.length - 1].focus();
+      }
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Focus first menu item when menu opens
+    const firstItem = menuContainerRef.current?.querySelector<HTMLElement>(
+      '[role="menuitem"]',
+    );
+    firstItem?.focus();
+
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
 
@@ -63,7 +99,7 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 flex min-h-16 flex-shrink-0 items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 pl-16 backdrop-blur sm:gap-4 sm:px-6 sm:pl-16 md:pl-6">
-      <form onSubmit={handleSearch} className="min-w-0 max-w-md flex-1">
+      <form onSubmit={handleSearch} className="min-w-0 max-w-md flex-1" role="search" aria-label="Búsqueda de pacientes">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <label htmlFor="global-patient-search" className="sr-only">
@@ -100,9 +136,11 @@ export function Topbar() {
           </Button>
           {menuOpen && (
             <div
+              ref={menuContainerRef}
               className="absolute right-0 top-[calc(100%+0.5rem)] z-40 min-w-56 rounded-[var(--radius-card)] border border-border bg-surface-elevated p-2 shadow-lg"
               role="menu"
               aria-label="Menú de cuenta"
+              tabIndex={-1}
             >
               <div className="border-b border-border px-3 py-2">
                 <p className="truncate text-small font-medium text-text">{displayName}</p>

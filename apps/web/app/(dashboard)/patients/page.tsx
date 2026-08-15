@@ -89,6 +89,7 @@ export default function PatientsPage() {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         className="max-w-md"
+        aria-label="Filtrar pacientes por nombre"
       />
 
       {loading ? (
@@ -125,7 +126,7 @@ export default function PatientsPage() {
             >
               <CardHeader className="flex flex-row items-center gap-4 pb-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
-                  <User className="h-5 w-5" />
+                  <User className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div className="space-y-1">
                   <CardTitle className="text-h3">
@@ -145,11 +146,11 @@ export default function PatientsPage() {
               <CardContent className="flex items-center gap-4 pt-0 text-small text-muted">
                 {p.phone && (
                   <span className="flex items-center gap-1">
-                    <Phone className="h-3 w-3" /> {p.phone}
+                    <Phone className="h-3 w-3" aria-hidden="true" /> {p.phone}
                   </span>
                 )}
                 {p.email && <span className="truncate">{p.email}</span>}
-                <Calendar className="ml-auto h-3 w-3" />
+                <Calendar className="ml-auto h-3 w-3" aria-hidden="true" />
               </CardContent>
             </Card>
           ))}

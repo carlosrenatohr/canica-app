@@ -60,6 +60,7 @@ export function Sidebar() {
   return (
     <>
       <aside
+        aria-label="Barra lateral de navegación"
         className={cn(
           "hidden h-dvh flex-shrink-0 flex-col justify-between border-r bg-surface transition-[width] duration-200 ease-out md:flex",
           collapsed ? "w-[72px]" : "w-[260px]",
@@ -183,8 +184,12 @@ function NavLink({
       className={cn("w-full justify-start gap-3", collapsed && "justify-center")}
       size="sm"
     >
-      <Link href={item.href} aria-current={active ? "page" : undefined}>
-        <item.icon className="h-4 w-4 flex-shrink-0" />
+      <Link
+        href={item.href}
+        aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? item.label : undefined}
+      >
+        <item.icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
         {!collapsed && <span>{item.label}</span>}
       </Link>
     </Button>
