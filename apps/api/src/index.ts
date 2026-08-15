@@ -147,7 +147,8 @@ app.use("/patients/*", sessionMiddleware());
 app.get("/patients", requirePermission(Permission.PATIENT_READ), async (c) => {
   const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
   const offset = Math.max(Number(c.req.query("offset") ?? 0), 0);
-  const result = await patientsRepo.listPatients(c.var.db, orgId(c), { limit, offset });
+  const search = c.req.query("search") ?? undefined;
+  const result = await patientsRepo.listPatients(c.var.db, orgId(c), { limit, offset, search });
   return c.json(result);
 });
 
