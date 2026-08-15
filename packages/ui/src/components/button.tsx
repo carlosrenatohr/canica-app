@@ -15,7 +15,7 @@ const buttonVariants = cva(
         danger: "btn-danger hover:opacity-90",
       },
       size: {
-        sm: "h-9 px-3 text-small",
+        sm: "h-11 px-3 text-small",
         default: "h-11 px-4 text-body",
         lg: "h-12 px-6 text-body",
         icon: "h-10 w-10",
