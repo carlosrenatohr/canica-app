@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import { closeDb, createDb, patients } from "@canica/db";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { closeDb, createDb, patients, appointments, consultations, users } from "@canica/db";
 import { createAuth, Permission } from "@canica/auth";
 import * as patientsRepo from "@canica/db/repos/patients";
 import * as consultationsRepo from "@canica/db/repos/consultations";
@@ -19,7 +19,6 @@ import {
   UpdateAppointmentStatusInput,
 } from "@canica/validation";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { sql } from "drizzle-orm";
 import { ApiEnv, requirePermission, sessionMiddleware } from "./auth.middleware";
 
 const baseURL = process.env.API_BASE_URL ?? "http://localhost:3001";
@@ -97,6 +96,50 @@ app.get("/debug/db", async (c) => {
 app.get("/me", sessionMiddleware(), (c) => {
   const actor = c.get("actor");
   return c.json({ data: actor });
+});
+
+app.get("/dashboard/summary", sessionMiddleware(), requirePermission(Permission.PATIENT_READ), async (c) => {
+  const db = c.var.db;
+  const organizationId = c.var.actor.organizationId;
+
+  const [totalPatientsResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(patients)
+    .where(and(eq(patients.organizationId, organizationId), eq(patients.archived, false)));
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+  const [todayAppointmentsResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.organizationId, organizationId),
+        gte(appointments.startDate, startOfToday),
+        lt(appointments.startDate, startOfTomorrow)
+      )
+    );
+
+  const [pendingConsultationsResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(consultations)
+    .where(
+      and(
+        eq(consultations.organizationId, organizationId),
+        eq(consultations.status, "draft")
+      )
+    );
+
+  return c.json({
+    data: {
+      totalPatients: totalPatientsResult?.count ?? 0,
+      todayAppointments: todayAppointmentsResult?.count ?? 0,
+      pendingConsultations: pendingConsultationsResult?.count ?? 0,
+    },
+  });
 });
 
 app.use("/patients/*", sessionMiddleware());
@@ -462,7 +505,26 @@ app.get("/audit", requirePermission(Permission.AUDIT_READ), async (c) => {
     fromDate: c.req.query("fromDate") ?? undefined,
     toDate: c.req.query("toDate") ?? undefined,
   });
-  return c.json({ data: logs });
+
+  const uniqueActorIds = [...new Set(logs.map((log) => log.actorId))];
+  const actorNameMap = new Map<string, string>();
+
+  for (const actorId of uniqueActorIds) {
+    const user = await c.var.db.query.users.findFirst({
+      where: eq(users.id, actorId),
+      columns: { name: true },
+    });
+    if (user) {
+      actorNameMap.set(actorId, user.name);
+    }
+  }
+
+  const logsWithActorNames = logs.map((log) => ({
+    ...log,
+    actorName: actorNameMap.get(log.actorId) ?? null,
+  }));
+
+  return c.json({ data: logsWithActorNames });
 });
 
 app.onError((err, c) => {
