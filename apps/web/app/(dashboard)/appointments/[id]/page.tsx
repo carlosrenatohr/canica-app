@@ -133,7 +133,7 @@ function DetailItem({ label, children }: { label: string; children: ReactNode })
 
 function AppointmentSkeleton() {
   return (
-    <main className="space-y-6 p-6 sm:p-8" aria-busy="true">
+    <main className="space-y-6" aria-busy="true">
       <Skeleton className="h-5 w-48" />
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-3">
@@ -336,7 +336,7 @@ export default function AppointmentDetailPage({
 
   if (pageState === "unauthenticated") {
     return (
-      <main className="space-y-4 p-6 sm:p-8">
+      <main className="space-y-4">
         <h1 className="text-h2 font-semibold text-text">Detalle de cita</h1>
         <p className="text-small text-muted">Debes iniciar sesión para consultar esta cita.</p>
         <Link href="/login" className="inline-flex">
@@ -348,7 +348,7 @@ export default function AppointmentDetailPage({
 
   if (pageState === "forbidden") {
     return (
-      <main className="space-y-4 p-6 sm:p-8">
+      <main className="space-y-4">
         <CircleAlert className="h-8 w-8 text-warning" aria-hidden="true" />
         <h1 className="text-h2 font-semibold text-text">Acceso no disponible</h1>
         <p className="max-w-xl text-small text-muted">
@@ -363,7 +363,7 @@ export default function AppointmentDetailPage({
 
   if (pageState === "not-found") {
     return (
-      <main className="space-y-4 p-6 sm:p-8">
+      <main className="space-y-4">
         <EmptyState
           title="Cita no encontrada"
           description={error ?? "La cita que buscas no existe o ya no está disponible."}
@@ -377,7 +377,7 @@ export default function AppointmentDetailPage({
 
   if (pageState === "error") {
     return (
-      <main className="space-y-4 p-6 sm:p-8">
+      <main className="space-y-4">
         <p className="text-small text-danger" role="alert">
           {error ?? "No se pudo cargar la cita."}
         </p>
@@ -407,7 +407,7 @@ export default function AppointmentDetailPage({
     : "Paciente no disponible";
 
   return (
-    <main className="max-w-6xl space-y-6 p-6 sm:p-8">
+    <main className="max-w-6xl space-y-6">
       <Breadcrumb
         items={[
           { label: "Citas", href: "/appointments" },

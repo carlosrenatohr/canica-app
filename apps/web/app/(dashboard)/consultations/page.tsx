@@ -11,6 +11,7 @@ import {
   CardTitle,
   Skeleton,
   EmptyState,
+  Pagination,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -47,10 +48,14 @@ function statusLabel(status: Consultation["status"]): string {
   );
 }
 
+const PAGE_SIZE = 20;
+
 export default function ConsultationsListPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,20 +64,23 @@ export default function ConsultationsListPage() {
 
   useEffect(() => {
     if (!session) return;
-    apiFetch("/api/consultations")
+    setLoading(true);
+    const offset = (page - 1) * PAGE_SIZE;
+    apiFetch(`/api/consultations?limit=${PAGE_SIZE}&offset=${offset}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        setConsultations(data.data ?? []);
+      .then((result) => {
+        setConsultations(result.data ?? []);
+        setTotal(result.total ?? 0);
         setLoading(false);
       })
       .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session]);
+  }, [session, page]);
 
   useEffect(() => {
     if (!session || consultations.length === 0) return;
@@ -94,7 +102,7 @@ export default function ConsultationsListPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para ver las consultas.
         </p>
@@ -104,7 +112,7 @@ export default function ConsultationsListPage() {
 
   if (loading) {
     return (
-      <main className="p-8 space-y-6 max-w-5xl">
+      <main className="space-y-6" aria-busy="true">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-10 w-36" />
@@ -120,14 +128,22 @@ export default function ConsultationsListPage() {
 
   if (error) {
     return (
-      <main className="p-8">
-        <p className="text-danger">Error: {error}</p>
+      <main>
+        <Card role="alert">
+          <CardHeader>
+            <CardTitle>Error al cargar las consultas</CardTitle>
+            <p className="text-small text-muted">{error}</p>
+            <Button variant="outline" size="sm" className="mt-2 w-fit" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </CardHeader>
+        </Card>
       </main>
     );
   }
 
   return (
-    <main className="p-8 space-y-6 max-w-5xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">Consultas</h1>
       </div>
@@ -139,56 +155,64 @@ export default function ConsultationsListPage() {
           icon={<FileText className="h-10 w-10" />}
         />
       ) : (
-        <div className="space-y-3">
-          {consultations.map((c) => {
-            const patient = patients[c.patientId];
-            return (
-              <Card
-                key={c.id}
-                variant="interactive"
-                className="motion-card"
-                onClick={() =>
-                  router.push(`/patients/${c.patientId}/consultations/${c.id}`)
-                }
-              >
-                <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <CardTitle className="text-h3">
-                      {patient
-                        ? `${patient.firstName} ${patient.lastName}`
-                        : "Paciente"}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 text-small text-muted">
-                      <Calendar className="h-3 w-3" />
-                      <time dateTime={c.startedAt}>
-                        {new Date(c.startedAt).toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </time>
+        <>
+          <div className="space-y-3">
+            {consultations.map((c) => {
+              const patient = patients[c.patientId];
+              return (
+                <Card
+                  key={c.id}
+                  variant="interactive"
+                  className="motion-card"
+                  onClick={() =>
+                    router.push(`/patients/${c.patientId}/consultations/${c.id}`)
+                  }
+                >
+                  <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                      <FileText className="h-5 w-5" />
                     </div>
-                  </div>
-                  <Badge variant={statusVariant(c.status)} className="text-xs">
-                    {statusLabel(c.status)}
-                  </Badge>
-                </CardHeader>
-                {c.chiefComplaint && (
-                  <CardContent>
-                    <p className="line-clamp-2 text-small text-muted">
-                      {c.chiefComplaint}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                    <div className="flex-1 space-y-1">
+                      <CardTitle className="text-h3">
+                        {patient
+                          ? `${patient.firstName} ${patient.lastName}`
+                          : "Paciente"}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-small text-muted">
+                        <Calendar className="h-3 w-3" />
+                        <time dateTime={c.startedAt}>
+                          {new Date(c.startedAt).toLocaleDateString("es-ES", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </time>
+                      </div>
+                    </div>
+                    <Badge variant={statusVariant(c.status)} className="text-xs">
+                      {statusLabel(c.status)}
+                    </Badge>
+                  </CardHeader>
+                  {c.chiefComplaint && (
+                    <CardContent>
+                      <p className="line-clamp-2 text-small text-muted">
+                        {c.chiefComplaint}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+          <Pagination
+            current={page}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </main>
   );

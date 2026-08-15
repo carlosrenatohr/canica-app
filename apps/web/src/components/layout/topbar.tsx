@@ -151,7 +151,7 @@ export function Topbar() {
               <Link
                 href="/settings"
                 role="menuitem"
-                className="mt-1 flex min-h-10 items-center gap-2 rounded-[var(--radius-button)] px-3 text-small text-text hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="mt-1 flex min-h-10 items-center gap-2 rounded-[var(--radius-button)] px-3 text-small text-text transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 onClick={() => setMenuOpen(false)}
               >
                 <UserRound className="h-4 w-4" />
@@ -160,7 +160,7 @@ export function Topbar() {
               <button
                 type="button"
                 role="menuitem"
-                className="flex min-h-10 w-full items-center gap-2 rounded-[var(--radius-button)] px-3 text-left text-small text-danger hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+                className="flex min-h-10 w-full items-center gap-2 rounded-[var(--radius-button)] px-3 text-left text-small text-danger transition-colors hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                 onClick={signOut}
               >
                 <LogOut className="h-4 w-4" />

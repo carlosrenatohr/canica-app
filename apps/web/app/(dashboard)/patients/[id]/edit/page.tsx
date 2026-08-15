@@ -90,7 +90,7 @@ export default function EditPatientPage({
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p>Debes iniciar sesión para editar este paciente.</p>
       </main>
     );
@@ -98,7 +98,7 @@ export default function EditPatientPage({
 
   if (loading) {
     return (
-      <main className="space-y-5 p-6 sm:p-8" aria-busy="true">
+      <main className="space-y-5" aria-busy="true">
         <Skeleton className="h-8 w-52" />
         <Skeleton className="h-[520px] w-full max-w-2xl" />
       </main>
@@ -106,7 +106,7 @@ export default function EditPatientPage({
   }
   if (error) {
     return (
-      <main className="p-6 sm:p-8">
+      <main>
         <p className="text-small text-danger" role="alert">
           {error}
         </p>
@@ -115,14 +115,14 @@ export default function EditPatientPage({
   }
   if (!patient) {
     return (
-      <main className="p-6 sm:p-8">
+      <main>
         <p className="text-small text-muted">No se encontró el paciente.</p>
       </main>
     );
   }
 
   return (
-    <main className="p-6 sm:p-8">
+    <main>
       <PatientForm
         title="Editar paciente"
         description={`Actualiza los datos de ${patient.firstName} ${patient.lastName}.`}

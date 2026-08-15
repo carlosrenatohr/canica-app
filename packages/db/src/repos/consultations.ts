@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import * as schema from "../schema";
 export type ConsultationRow = typeof schema.consultations.$inferSelect;
@@ -60,27 +60,35 @@ export async function getOrCreateMedicalRecord(
 export async function listConsultations(
   db: Db,
   organizationId: string,
-  patientId: string
-): Promise<ConsultationRow[]> {
-  return db
-    .select()
-    .from(schema.consultations)
-    .where(
-      and(
-        eq(schema.consultations.organizationId, organizationId),
-        eq(schema.consultations.patientId, patientId)
-      )
-    );
+  patientId: string,
+  options?: { limit?: number; offset?: number }
+): Promise<{ data: ConsultationRow[]; total: number }> {
+  const where = and(
+    eq(schema.consultations.organizationId, organizationId),
+    eq(schema.consultations.patientId, patientId)
+  );
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+  const [data, countResult] = await Promise.all([
+    db.select().from(schema.consultations).where(where).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(schema.consultations).where(where),
+  ]);
+  return { data, total: countResult[0]?.count ?? 0 };
 }
 
 export async function listConsultationsByOrg(
   db: Db,
-  organizationId: string
-): Promise<ConsultationRow[]> {
-  return db
-    .select()
-    .from(schema.consultations)
-    .where(eq(schema.consultations.organizationId, organizationId));
+  organizationId: string,
+  options?: { limit?: number; offset?: number }
+): Promise<{ data: ConsultationRow[]; total: number }> {
+  const where = eq(schema.consultations.organizationId, organizationId);
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+  const [data, countResult] = await Promise.all([
+    db.select().from(schema.consultations).where(where).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(schema.consultations).where(where),
+  ]);
+  return { data, total: countResult[0]?.count ?? 0 };
 }
 
 export async function getConsultation(

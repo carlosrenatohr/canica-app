@@ -20,7 +20,7 @@ export default function NewPatientPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p>Debes iniciar sesión para crear un paciente.</p>
       </main>
     );
@@ -58,7 +58,7 @@ export default function NewPatientPage() {
   };
 
   return (
-    <main className="p-6 sm:p-8">
+    <main>
       <PatientForm
         title="Nuevo paciente"
         description="Registra los datos de identificación y contacto necesarios para la atención."

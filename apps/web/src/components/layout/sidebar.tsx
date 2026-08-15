@@ -181,7 +181,7 @@ function NavLink({
     <Button
       asChild
       variant={active ? "secondary" : "ghost"}
-      className={cn("w-full justify-start gap-3", collapsed && "justify-center")}
+      className={cn("w-full justify-start gap-3 transition-colors", collapsed && "justify-center")}
       size="sm"
     >
       <Link

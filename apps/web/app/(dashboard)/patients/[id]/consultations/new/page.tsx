@@ -98,7 +98,7 @@ export default function NewConsultationPage({
 
   if (!session) {
     return (
-      <div className="p-8">
+      <div>
         <p>Debes iniciar sesión para crear una consulta.</p>
       </div>
     );
@@ -106,7 +106,7 @@ export default function NewConsultationPage({
 
   if (patientLoading) {
     return (
-      <div className="p-6 sm:p-8" aria-busy="true">
+      <div aria-busy="true">
         <p className="text-small text-muted" role="status">
           Cargando información del paciente…
         </p>
@@ -116,7 +116,7 @@ export default function NewConsultationPage({
 
   if (patientError || !patient) {
     return (
-      <div className="p-6 sm:p-8">
+      <div>
         <p className="text-small text-danger" role="alert">
           {patientError ?? "No se encontró el paciente."}
         </p>
@@ -127,7 +127,7 @@ export default function NewConsultationPage({
   const displayName = `${patient.firstName} ${patient.lastName}`;
 
   return (
-    <div className="p-6 sm:p-8">
+    <div>
       <h1 className="text-h1 mb-6">
         Nueva consulta — {displayName}
       </h1>

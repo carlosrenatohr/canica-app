@@ -12,6 +12,7 @@ import {
   CardDescription,
   Skeleton,
   EmptyState,
+  Pagination,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -28,10 +29,14 @@ interface Patient {
   sex: string | null;
 }
 
+const PAGE_SIZE = 20;
+
 export default function PatientsPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -40,32 +45,36 @@ export default function PatientsPage() {
 
   useEffect(() => {
     if (!session) return;
-    apiFetch("/api/patients")
+    setLoading(true);
+    const offset = (page - 1) * PAGE_SIZE;
+    apiFetch(`/api/patients?limit=${PAGE_SIZE}&offset=${offset}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        setPatients(data.data ?? []);
+      .then((result) => {
+        setPatients(result.data ?? []);
+        setTotal(result.total ?? 0);
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session]);
+  }, [session, page]);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Archivar a ${name}?`)) return;
     const res = await apiFetch(`/api/patients/${id}`, { method: "DELETE" });
     if (res.ok) {
       setPatients((prev) => prev.filter((p) => p.id !== id));
+      setTotal((prev) => prev - 1);
     }
   };
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted">Debes iniciar sesión para ver pacientes.</p>
       </main>
     );
@@ -76,7 +85,7 @@ export default function PatientsPage() {
   );
 
   return (
-    <main className="p-8 space-y-6 max-w-7xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">Pacientes</h1>
         <Button variant="primary" onClick={() => router.push("/patients/new")}>
@@ -99,7 +108,14 @@ export default function PatientsPage() {
           ))}
         </div>
       ) : error ? (
-        <p className="text-danger">Error: {error}</p>
+        <Card>
+          <CardContent className="flex items-center justify-between p-4">
+            <p className="text-small text-danger">{error}</p>
+            <Button variant="outline" size="sm" onClick={() => { setError(null); setLoading(true); setPage(1); }}>
+              Reintentar
+            </Button>
+          </CardContent>
+        </Card>
       ) : filtered.length === 0 ? (
         <EmptyState
           title={patients.length === 0 ? "Sin pacientes" : "Sin resultados"}
@@ -116,8 +132,9 @@ export default function PatientsPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((p) => (
             <Card
               key={p.id}
               variant="interactive"
@@ -154,7 +171,14 @@ export default function PatientsPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+          <Pagination
+            current={page}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </main>
   );

@@ -22,18 +22,6 @@ interface DashboardData {
   pendingConsultations?: number;
 }
 
-interface PatientSummary {
-  id: string;
-}
-
-interface AppointmentSummary {
-  startDate?: string;
-}
-
-interface ConsultationSummary {
-  status?: string;
-}
-
 interface DashboardScope {
   patients: boolean;
   appointments: boolean;
@@ -69,14 +57,6 @@ function scopeForRole(role: string | undefined): DashboardScope {
   );
 }
 
-async function fetchCollection<T>(path: string): Promise<T[]> {
-  const response = await apiFetch(path);
-  if (!response.ok) throw new Error("No se pudo cargar la información.");
-  const body = (await response.json()) as { data?: unknown };
-  if (!Array.isArray(body.data)) throw new Error("La respuesta no tiene el formato esperado.");
-  return body.data as T[];
-}
-
 export default function DashboardPage() {
   const { data: session } = authClient.useSession();
   const user = session?.user as { role?: string; name?: string | null } | undefined;
@@ -103,28 +83,20 @@ export default function DashboardPage() {
     setLoading(true);
     setError(false);
 
-    Promise.all([
-      scope.patients
-        ? fetchCollection<PatientSummary>("/api/patients")
-        : Promise.resolve(null),
-      scope.appointments
-        ? fetchCollection<AppointmentSummary>("/api/appointments")
-        : Promise.resolve(null),
-      scope.consultations
-        ? fetchCollection<ConsultationSummary>("/api/consultations")
-        : Promise.resolve(null),
-    ])
-      .then(([patients, appointments, consultations]) => {
+    if (!scope.patients) {
+      setData({ patientCount: undefined, todayAppointments: undefined, pendingConsultations: undefined });
+      setLoading(false);
+      return () => { active = false; };
+    }
+
+    apiFetch("/api/dashboard/summary")
+      .then((r) => r.json())
+      .then((summary) => {
         if (!active) return;
-        const today = new Date().toISOString().slice(0, 10);
         setData({
-          patientCount: patients?.length,
-          todayAppointments: appointments?.filter((appointment) =>
-            appointment.startDate?.startsWith(today),
-          ).length,
-          pendingConsultations: consultations?.filter(
-            (consultation) => consultation.status !== "finalized",
-          ).length,
+          patientCount: summary.data?.totalPatients,
+          todayAppointments: summary.data?.todayAppointments,
+          pendingConsultations: summary.data?.pendingConsultations,
         });
       })
       .catch(() => {
@@ -143,7 +115,7 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <main className="p-6 sm:p-8">
+      <main className="max-w-7xl space-y-8">
         <p className="text-muted" role="status">
           Se necesita una sesión activa para ver este resumen.
         </p>
@@ -153,7 +125,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="max-w-7xl space-y-8 p-6 sm:p-8" aria-busy="true">
+      <main className="max-w-7xl space-y-8" aria-busy="true">
         <div className="space-y-3">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-5 w-80" />
@@ -172,7 +144,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <main className="max-w-3xl space-y-4 p-6 sm:p-8">
+      <main className="max-w-3xl space-y-4">
         <div>
           <p className="text-h3 font-semibold text-text">No se pudo cargar el resumen</p>
           <p className="mt-2 text-small text-muted">
@@ -239,7 +211,7 @@ export default function DashboardPage() {
   }>;
 
   return (
-    <main className="max-w-7xl space-y-8 p-6 sm:p-8">
+    <main className="max-w-7xl space-y-8">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-caption font-semibold uppercase tracking-[0.16em] text-primary">

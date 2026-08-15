@@ -11,6 +11,7 @@ import {
   CardTitle,
   Skeleton,
   EmptyState,
+  Pagination,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -72,10 +73,14 @@ function groupByDate(
   );
 }
 
+const PAGE_SIZE = 20;
+
 export default function AppointmentsPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,20 +91,23 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     if (!session) return;
-    apiFetch("/api/appointments")
+    setLoading(true);
+    const offset = (page - 1) * PAGE_SIZE;
+    apiFetch(`/api/appointments?limit=${PAGE_SIZE}&offset=${offset}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        setAppointments(data.data ?? []);
+      .then((result) => {
+        setAppointments(result.data ?? []);
+        setTotal(result.total ?? 0);
         setLoading(false);
       })
       .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [session]);
+  }, [session, page]);
 
   useEffect(() => {
     if (!session || appointments.length === 0) return;
@@ -119,7 +127,7 @@ export default function AppointmentsPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para ver las citas.
         </p>
@@ -133,7 +141,7 @@ export default function AppointmentsPage() {
 
   if (loading) {
     return (
-      <main className="p-8 space-y-6 max-w-5xl">
+      <main className="space-y-6" aria-busy="true">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-10 w-36" />
@@ -149,8 +157,16 @@ export default function AppointmentsPage() {
 
   if (error) {
     return (
-      <main className="p-8">
-        <p className="text-danger">Error: {error}</p>
+      <main>
+        <Card role="alert">
+          <CardHeader>
+            <CardTitle>Error al cargar las citas</CardTitle>
+            <p className="text-small text-muted">{error}</p>
+            <Button variant="outline" size="sm" className="mt-2 w-fit" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </CardHeader>
+        </Card>
       </main>
     );
   }
@@ -219,7 +235,7 @@ export default function AppointmentsPage() {
   );
 
   return (
-    <main className="p-8 space-y-6 max-w-5xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">Citas</h1>
         <Button onClick={() => router.push("/appointments/new")}>
@@ -236,47 +252,55 @@ export default function AppointmentsPage() {
           onAction={() => router.push("/appointments/new")}
         />
       ) : (
-        <div>
-          {upcoming.length > 0 && (
-            <>
-              <h2 className="mb-2 text-h3 font-medium text-primary">
-                Próximas
-              </h2>
-              {upcoming.map((d) =>
-                renderGroup(
-                  d === today
-                    ? "Hoy"
-                    : new Date(d).toLocaleDateString("es-ES", {
-                        weekday: "short",
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }),
-                  d,
-                  grouped[d]!,
-                ),
-              )}
-            </>
-          )}
-          {past.length > 0 && (
-            <>
-              <h2 className="mb-2 mt-4 text-h3 font-medium text-primary">
-                Anteriores
-              </h2>
-              {past.map((d) =>
-                renderGroup(
-                  new Date(d).toLocaleDateString("es-ES", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  }),
-                  d,
-                  grouped[d]!,
-                ),
-              )}
-            </>
-          )}
-        </div>
+        <>
+          <div>
+            {upcoming.length > 0 && (
+              <>
+                <h2 className="mb-2 text-h3 font-medium text-primary">
+                  Próximas
+                </h2>
+                {upcoming.map((d) =>
+                  renderGroup(
+                    d === today
+                      ? "Hoy"
+                      : new Date(d).toLocaleDateString("es-ES", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }),
+                    d,
+                    grouped[d]!,
+                  ),
+                )}
+              </>
+            )}
+            {past.length > 0 && (
+              <>
+                <h2 className="mb-2 mt-4 text-h3 font-medium text-primary">
+                  Anteriores
+                </h2>
+                {past.map((d) =>
+                  renderGroup(
+                    new Date(d).toLocaleDateString("es-ES", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }),
+                    d,
+                    grouped[d]!,
+                  ),
+                )}
+              </>
+            )}
+          </div>
+          <Pagination
+            current={page}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </main>
   );

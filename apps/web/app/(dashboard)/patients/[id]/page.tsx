@@ -91,7 +91,7 @@ export default function PatientDetailPage({
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted">
           Debes iniciar sesión para ver este paciente.
         </p>
@@ -101,21 +101,21 @@ export default function PatientDetailPage({
 
   if (loading) {
     return (
-      <main className="p-8">
+      <main>
         <PatientSkeleton />
       </main>
     );
   }
   if (error) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-danger">Error: {error}</p>
       </main>
     );
   }
   if (!patient) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">Paciente no encontrado.</p>
       </main>
     );

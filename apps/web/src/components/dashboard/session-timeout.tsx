@@ -159,7 +159,7 @@ export function SessionTimeout() {
     >
       <div
         ref={dialogRef}
-        className="w-full max-w-sm rounded-[var(--radius-dialog)] bg-surface p-6 shadow-lg"
+        className="w-full max-w-sm rounded-[var(--radius-dialog)] bg-surface p-4 shadow-lg sm:p-6"
         tabIndex={-1}
       >
         <h2 id="session-timeout-title" className="text-h3 font-semibold text-primary">
