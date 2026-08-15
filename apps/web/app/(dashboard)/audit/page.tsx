@@ -11,6 +11,7 @@ import {
   EmptyState,
   Input,
   Label,
+  Pagination,
   Skeleton,
   Table,
   TableBody,
@@ -100,9 +101,13 @@ function selectClassName() {
   return "h-10 w-full rounded-[var(--radius-input)] border border-border bg-surface px-3 text-small text-text outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary";
 }
 
+const PAGE_SIZE = 20;
+
 export default function AuditLogPage() {
   const { data: session } = authClient.useSession();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionFilter, setActionFilter] = useState("");
@@ -111,6 +116,10 @@ export default function AuditLogPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useSafePageTitle("Registro de auditoría");
+
+  useEffect(() => {
+    setPage(1);
+  }, [actionFilter, entityFilter]);
 
   useEffect(() => {
     let active = true;
@@ -127,21 +136,24 @@ export default function AuditLogPage() {
     const params = new URLSearchParams();
     if (actionFilter) params.set("action", actionFilter);
     if (entityFilter) params.set("targetEntity", entityFilter);
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String((page - 1) * PAGE_SIZE));
     const query = params.toString();
 
-    apiFetch(`/api/audit${query ? `?${query}` : ""}`)
+    apiFetch(`/api/audit?${query}`)
       .then(async (response) => {
         if (!response.ok) {
           if (response.status === 403) throw new Error("forbidden");
           throw new Error("request_failed");
         }
-        const body = (await response.json()) as { data?: unknown };
+        const body = (await response.json()) as { data?: unknown; total?: number };
         if (!Array.isArray(body.data)) throw new Error("invalid_response");
-        return body.data as AuditLog[];
+        return { logs: body.data as AuditLog[], total: body.total ?? 0 };
       })
-      .then((nextLogs) => {
+      .then((next) => {
         if (!active) return;
-        setLogs(nextLogs);
+        setLogs(next.logs);
+        setTotal(next.total);
       })
       .catch((requestError: Error) => {
         if (!active) return;
@@ -158,7 +170,7 @@ export default function AuditLogPage() {
     return () => {
       active = false;
     };
-  }, [session, actionFilter, entityFilter, refreshKey]);
+  }, [session, actionFilter, entityFilter, refreshKey, page]);
 
   const normalizedSearch = searchFilter.trim().toLowerCase();
   const filtered = normalizedSearch
@@ -311,63 +323,71 @@ export default function AuditLogPage() {
           icon={<Shield className="h-10 w-10 text-muted" aria-hidden="true" />}
         />
       ) : (
-        <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">Fecha</TableHead>
-                <TableHead scope="col">Acción</TableHead>
-                <TableHead scope="col">Entidad</TableHead>
-                <TableHead scope="col">Actor</TableHead>
-                <TableHead scope="col">Resumen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="whitespace-nowrap text-muted">
-                    <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex min-w-44 items-center gap-2">
-                      <Badge variant={actionVariant(log.action)} className="gap-1.5">
-                        {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
-                        {actionLabel(log.action)}
-                      </Badge>
-                      {!ACTION_LABELS[log.action] && (
-                        <code className="text-caption text-muted">{log.action}</code>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="min-w-36 space-y-1">
-                      <span className="block font-medium">{entityLabel(log.targetEntity)}</span>
-                      {!ENTITY_LABELS[log.targetEntity] && (
-                        <code className="block text-caption text-muted">{log.targetEntity}</code>
-                      )}
-                      {log.targetId && (
-                        <code className="block break-all text-caption text-muted" title={log.targetId}>
-                          {log.targetId}
-                        </code>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="min-w-36 space-y-1">
-                      <span className="block text-small text-muted">Usuario no resuelto</span>
-                      <code className="block break-all text-caption text-muted" title={log.actorId}>
-                        {log.actorId}
-                      </code>
-                    </div>
-                  </TableCell>
-                  <TableCell className="min-w-56 text-muted">
-                    {log.summary || "Sin resumen disponible"}
-                  </TableCell>
+        <>
+          <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">Fecha</TableHead>
+                  <TableHead scope="col">Acción</TableHead>
+                  <TableHead scope="col">Entidad</TableHead>
+                  <TableHead scope="col">Actor</TableHead>
+                  <TableHead scope="col">Resumen</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="whitespace-nowrap text-muted">
+                      <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex min-w-44 items-center gap-2">
+                        <Badge variant={actionVariant(log.action)} className="gap-1.5">
+                          {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
+                          {actionLabel(log.action)}
+                        </Badge>
+                        {!ACTION_LABELS[log.action] && (
+                          <code className="text-caption text-muted">{log.action}</code>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-36 space-y-1">
+                        <span className="block font-medium">{entityLabel(log.targetEntity)}</span>
+                        {!ENTITY_LABELS[log.targetEntity] && (
+                          <code className="block text-caption text-muted">{log.targetEntity}</code>
+                        )}
+                        {log.targetId && (
+                          <code className="block break-all text-caption text-muted" title={log.targetId}>
+                            {log.targetId}
+                          </code>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-36 space-y-1">
+                        <span className="block text-small text-muted">Usuario no resuelto</span>
+                        <code className="block break-all text-caption text-muted" title={log.actorId}>
+                          {log.actorId}
+                        </code>
+                      </div>
+                    </TableCell>
+                    <TableCell className="min-w-56 text-muted">
+                      {log.summary || "Sin resumen disponible"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <Pagination
+            current={page}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </main>
   );

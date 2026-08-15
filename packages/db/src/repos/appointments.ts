@@ -1,4 +1,4 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import * as schema from "../schema";
 
@@ -29,8 +29,10 @@ export async function listAppointments(
     fromDate?: string;
     toDate?: string;
     status?: typeof schema.appointmentStatus.enumValues[number];
+    limit?: number;
+    offset?: number;
   }
-): Promise<AppointmentRow[]> {
+): Promise<{ data: AppointmentRow[]; total: number }> {
   const conditions = [eq(schema.appointments.organizationId, organizationId)];
 
   if (options?.providerId) {
@@ -46,10 +48,14 @@ export async function listAppointments(
     conditions.push(lte(schema.appointments.startDate, new Date(options.toDate)));
   }
 
-  return db
-    .select()
-    .from(schema.appointments)
-    .where(and(...conditions));
+  const where = and(...conditions);
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+  const [data, countResult] = await Promise.all([
+    db.select().from(schema.appointments).where(where).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(schema.appointments).where(where),
+  ]);
+  return { data, total: countResult[0]?.count ?? 0 };
 }
 
 export async function getAppointment(

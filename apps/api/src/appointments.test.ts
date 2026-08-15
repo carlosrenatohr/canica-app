@@ -46,13 +46,13 @@ function makeApp(session: any) {
   app.use("/appointments/*", sessionMiddleware());
 
   app.get("/appointments", requirePermission(Permission.APPOINTMENT_READ), async (c) => {
-    const data = await appointmentsRepo.listAppointments(c.var.db, c.var.actor.organizationId, {
+    const result = await appointmentsRepo.listAppointments(c.var.db, c.var.actor.organizationId, {
       providerId: c.req.query("providerId") ?? undefined,
       fromDate: c.req.query("fromDate") ?? undefined,
       toDate: c.req.query("toDate") ?? undefined,
       status: c.req.query("status") as any,
     });
-    return c.json({ data });
+    return c.json(result);
   });
 
   app.get("/appointments/:id", requirePermission(Permission.APPOINTMENT_READ), async (c) => {
@@ -120,7 +120,7 @@ describe("Appointments routes", () => {
   });
 
   it("GET /appointments returns list", async () => {
-    mockListAppointments.mockResolvedValue([sampleAppointment] as any);
+    mockListAppointments.mockResolvedValue({ data: [sampleAppointment], total: 1 } as any);
     const app = makeApp(doctorSession);
     const res = await app.request("/appointments");
     expect(res.status).toBe(200);
@@ -129,7 +129,7 @@ describe("Appointments routes", () => {
   });
 
   it("GET /appointments with status filter", async () => {
-    mockListAppointments.mockResolvedValue([]);
+    mockListAppointments.mockResolvedValue({ data: [], total: 0 } as any);
     const app = makeApp(doctorSession);
     const res = await app.request("/appointments?status=confirmed");
     expect(res.status).toBe(200);

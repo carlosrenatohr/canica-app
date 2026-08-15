@@ -145,8 +145,10 @@ app.get("/dashboard/summary", sessionMiddleware(), requirePermission(Permission.
 app.use("/patients/*", sessionMiddleware());
 
 app.get("/patients", requirePermission(Permission.PATIENT_READ), async (c) => {
-  const patients = await patientsRepo.listPatients(c.var.db, orgId(c));
-  return c.json({ data: patients });
+  const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
+  const offset = Math.max(Number(c.req.query("offset") ?? 0), 0);
+  const result = await patientsRepo.listPatients(c.var.db, orgId(c), { limit, offset });
+  return c.json(result);
 });
 
 app.get("/patients/:id", requirePermission(Permission.PATIENT_READ), async (c) => {
@@ -209,13 +211,15 @@ app.use("/consultations/*", sessionMiddleware());
 app.get("/consultations", requirePermission(Permission.CONSULTATION_READ), async (c) => {
   const patientId = c.req.query("patientId");
   const organizationId = c.var.actor.organizationId;
-  let consultations;
+  const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
+  const offset = Math.max(Number(c.req.query("offset") ?? 0), 0);
+  let result;
   if (patientId) {
-    consultations = await consultationsRepo.listConsultations(c.var.db, organizationId, patientId);
+    result = await consultationsRepo.listConsultations(c.var.db, organizationId, patientId, { limit, offset });
   } else {
-    consultations = await consultationsRepo.listConsultationsByOrg(c.var.db, organizationId);
+    result = await consultationsRepo.listConsultationsByOrg(c.var.db, organizationId, { limit, offset });
   }
-  return c.json({ data: consultations });
+  return c.json(result);
 });
 
 app.get("/consultations/:id", requirePermission(Permission.CONSULTATION_READ), async (c) => {
@@ -351,7 +355,9 @@ app.get("/patients/:id/timeline", requirePermission(Permission.PATIENT_READ), as
 app.use("/appointments/*", sessionMiddleware());
 
 app.get("/appointments", requirePermission(Permission.APPOINTMENT_READ), async (c) => {
-  const appointments = await appointmentsRepo.listAppointments(c.var.db, c.var.actor.organizationId, {
+  const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
+  const offset = Math.max(Number(c.req.query("offset") ?? 0), 0);
+  const result = await appointmentsRepo.listAppointments(c.var.db, c.var.actor.organizationId, {
     providerId: c.req.query("providerId") ?? undefined,
     fromDate: c.req.query("fromDate") ?? undefined,
     toDate: c.req.query("toDate") ?? undefined,
@@ -363,8 +369,10 @@ app.get("/appointments", requirePermission(Permission.APPOINTMENT_READ), async (
       | "cancelled"
       | "no-show"
       | undefined,
+    limit,
+    offset,
   });
-  return c.json({ data: appointments });
+  return c.json(result);
 });
 
 app.get("/appointments/:id", requirePermission(Permission.APPOINTMENT_READ), async (c) => {

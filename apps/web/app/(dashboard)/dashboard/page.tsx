@@ -22,18 +22,6 @@ interface DashboardData {
   pendingConsultations?: number;
 }
 
-interface PatientSummary {
-  id: string;
-}
-
-interface AppointmentSummary {
-  startDate?: string;
-}
-
-interface ConsultationSummary {
-  status?: string;
-}
-
 interface DashboardScope {
   patients: boolean;
   appointments: boolean;
@@ -69,14 +57,6 @@ function scopeForRole(role: string | undefined): DashboardScope {
   );
 }
 
-async function fetchCollection<T>(path: string): Promise<T[]> {
-  const response = await apiFetch(path);
-  if (!response.ok) throw new Error("No se pudo cargar la información.");
-  const body = (await response.json()) as { data?: unknown };
-  if (!Array.isArray(body.data)) throw new Error("La respuesta no tiene el formato esperado.");
-  return body.data as T[];
-}
-
 export default function DashboardPage() {
   const { data: session } = authClient.useSession();
   const user = session?.user as { role?: string; name?: string | null } | undefined;
@@ -103,28 +83,20 @@ export default function DashboardPage() {
     setLoading(true);
     setError(false);
 
-    Promise.all([
-      scope.patients
-        ? fetchCollection<PatientSummary>("/api/patients")
-        : Promise.resolve(null),
-      scope.appointments
-        ? fetchCollection<AppointmentSummary>("/api/appointments")
-        : Promise.resolve(null),
-      scope.consultations
-        ? fetchCollection<ConsultationSummary>("/api/consultations")
-        : Promise.resolve(null),
-    ])
-      .then(([patients, appointments, consultations]) => {
+    if (!scope.patients) {
+      setData({ patientCount: undefined, todayAppointments: undefined, pendingConsultations: undefined });
+      setLoading(false);
+      return () => { active = false; };
+    }
+
+    apiFetch("/api/dashboard/summary")
+      .then((r) => r.json())
+      .then((summary) => {
         if (!active) return;
-        const today = new Date().toISOString().slice(0, 10);
         setData({
-          patientCount: patients?.length,
-          todayAppointments: appointments?.filter((appointment) =>
-            appointment.startDate?.startsWith(today),
-          ).length,
-          pendingConsultations: consultations?.filter(
-            (consultation) => consultation.status !== "finalized",
-          ).length,
+          patientCount: summary.data?.totalPatients,
+          todayAppointments: summary.data?.todayAppointments,
+          pendingConsultations: summary.data?.pendingConsultations,
         });
       })
       .catch(() => {

@@ -1,7 +1,7 @@
 // Typed patient repositories with organization scoping.
 // All reads/writes require organization_id to enforce tenant boundaries.
 // Superadmin role bypasses org scoping (passes organizationId = null).
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import * as schema from "../schema";
 
@@ -52,15 +52,23 @@ export async function getPatient(
   return row;
 }
 
-export async function listPatients(db: Db, organizationId: string | null): Promise<PatientRow[]> {
+export async function listPatients(
+  db: Db,
+  organizationId: string | null,
+  options?: { limit?: number; offset?: number }
+): Promise<{ data: PatientRow[]; total: number }> {
   const conditions = [eq(schema.patients.archived, false)];
   if (organizationId !== null) {
     conditions.push(eq(schema.patients.organizationId, organizationId));
   }
-  return db
-    .select()
-    .from(schema.patients)
-    .where(and(...conditions));
+  const where = and(...conditions);
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+  const [data, countResult] = await Promise.all([
+    db.select().from(schema.patients).where(where).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(schema.patients).where(where),
+  ]);
+  return { data, total: countResult[0]?.count ?? 0 };
 }
 
 export async function updatePatient(
