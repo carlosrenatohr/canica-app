@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  Badge,
   Skeleton,
   EmptyState,
 } from "@canica/ui";
@@ -142,9 +141,6 @@ export default function PatientsPage() {
                     {p.sex}
                   </CardDescription>
                 </div>
-                <Badge variant="neutral" className="ml-auto">
-                  activo
-                </Badge>
               </CardHeader>
               <CardContent className="flex items-center gap-4 pt-0 text-small text-muted">
                 {p.phone && (
