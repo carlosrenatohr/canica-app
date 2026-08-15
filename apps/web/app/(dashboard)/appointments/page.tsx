@@ -14,7 +14,7 @@ import {
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Clock, User } from "lucide-react";
+import { CalendarDays, Clock } from "lucide-react";
 import { useSafePageTitle } from "@/hooks/usePageTitle";
 
 interface Patient {
@@ -82,6 +82,8 @@ export default function AppointmentsPage() {
 
   useSafePageTitle("Citas");
 
+  const grouped = useMemo(() => groupByDate(appointments), [appointments]);
+
   useEffect(() => {
     if (!session) return;
     apiFetch("/api/appointments")
@@ -126,7 +128,6 @@ export default function AppointmentsPage() {
   }
 
   const today = new Date().toISOString().split("T")[0];
-  const grouped = useMemo(() => groupByDate(appointments), [appointments]);
   const upcoming = Object.keys(grouped).filter((d) => d >= (today ?? ""));
   const past = Object.keys(grouped).filter((d) => d < (today ?? ""));
 
@@ -173,9 +174,8 @@ export default function AppointmentsPage() {
           return (
             <Card
               key={a.id}
-              variant="interactive"
+              variant="default"
               className="motion-card p-4"
-              onClick={() => router.push(`/appointments/${a.id}`)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-start gap-3">

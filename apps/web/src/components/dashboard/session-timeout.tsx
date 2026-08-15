@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { authClient } from "@/lib/auth-client";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes (DS Fase 5)
 const WARNING_BEFORE = 30 * 1000; // warn 30s before (DS Fase 5)
@@ -23,8 +24,9 @@ export function SessionTimeout() {
     }
   }, []);
 
-  const redirectToLogin = useCallback(() => {
+  const redirectToLogin = useCallback(async () => {
     clearAllTimers();
+    await authClient.signOut().catch(() => undefined);
     window.location.href = "/login";
   }, [clearAllTimers]);
 
@@ -104,7 +106,7 @@ export function SessionTimeout() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm"
       role="alertdialog"
       aria-modal="true"
       aria-label="Sesión por expirar"
@@ -120,7 +122,7 @@ export function SessionTimeout() {
         </p>
         <div className="mt-4 flex gap-2">
           <button
-            className="inline-flex h-9 px-4 items-center justify-center rounded-[var(--radius-button)] bg-primary text-white text-small font-medium hover:bg-primary-hover motion-button focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-9 px-4 items-center justify-center rounded-[var(--radius-button)] bg-primary text-button-text text-small font-medium hover:bg-primary-hover motion-button focus-visible:ring-2 focus-visible:ring-ring"
             onClick={resetTimer}
           >
             Continuar sesión
