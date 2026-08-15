@@ -29,13 +29,14 @@ const Pagination = forwardRef<HTMLElement, PaginationProps>(
     return (
       <nav
         ref={ref}
+        aria-label="Paginación"
         className={cn("flex items-center justify-center gap-1 text-small", className)}
         {...props}
       >
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2"
+          className="h-10 px-3"
           disabled={current === 1}
           onClick={() => onPageChange(current - 1)}
         >
@@ -43,7 +44,7 @@ const Pagination = forwardRef<HTMLElement, PaginationProps>(
         </Button>
         {pages.map((p, i) =>
           p === "ellipsis" ? (
-            <span key={`e-${i}`} className="px-1.5 text-muted">
+            <span key={`e-${i}`} aria-hidden="true" className="px-1.5 text-muted">
               …
             </span>
           ) : (
@@ -51,7 +52,9 @@ const Pagination = forwardRef<HTMLElement, PaginationProps>(
               key={p}
               variant={p === current ? "primary" : "ghost"}
               size="sm"
-              className="h-7 w-9"
+              className="h-10 w-10"
+              aria-current={p === current ? "page" : undefined}
+              aria-label={`Página ${p}`}
               onClick={() => onPageChange(p as number)}
             >
               {p}
@@ -61,7 +64,7 @@ const Pagination = forwardRef<HTMLElement, PaginationProps>(
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2"
+          className="h-10 px-3"
           disabled={current === totalPages}
           onClick={() => onPageChange(current + 1)}
         >

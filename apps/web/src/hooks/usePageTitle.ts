@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const SAFE_TITLE_REGEX = /[^a-zA-Z0-9\s\-–]/g;
+const SAFE_TITLE_REGEX = /[^\p{L}\p{N}\s\-–]/gu;
 
 export function useSafePageTitle(label: string) {
   useEffect(() => {

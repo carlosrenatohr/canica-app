@@ -7,6 +7,7 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
+      aria-hidden="true"
       className={cn(
         "animate-pulse rounded-[var(--radius-card)] bg-secondary-bg",
         className,

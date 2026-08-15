@@ -28,24 +28,29 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await fetch(apiUrl("/api/auth/sign-up/email"), {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        password,
-        name,
-        organizationId: orgId,
-      }),
-    });
-    setLoading(false);
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      setError(body?.message ?? "Signup failed");
-      return;
+    try {
+      const res = await fetch(apiUrl("/api/auth/sign-up/email"), {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          organizationId: orgId,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setError(body?.message ?? "Signup failed");
+        return;
+      }
+      router.push("/login");
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    router.push("/login");
   }
 
   return (
@@ -53,7 +58,7 @@ export default function SignupPage() {
       <Card variant="elevated" className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="text-center text-display text-primary">
-            Canica
+            Crear cuenta
           </CardTitle>
           <CardDescription className="text-center">
             Crear cuenta profesional
@@ -61,7 +66,13 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error && <p className="text-small text-danger">{error}</p>}
+            {error && (
+              <p className="text-small text-danger" role="alert">
+                {error === "Signup failed"
+                  ? "No pudimos crear la cuenta. Revisa los datos e inténtalo de nuevo."
+                  : error}
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Nombre</Label>
               <Input
@@ -111,7 +122,7 @@ export default function SignupPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-small text-muted">
-            ¿Ya tenés cuenta?{" "}
+            ¿Ya tienes una cuenta?{" "}
             <a href="/login" className="text-secondary hover:underline">
               Iniciar sesión
             </a>

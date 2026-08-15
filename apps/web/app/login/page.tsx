@@ -51,15 +51,21 @@ export default function LoginPage() {
       <Card variant="elevated" className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="text-center text-display text-primary">
-            Canica
+            Iniciar sesión
           </CardTitle>
           <CardDescription className="text-center">
-            Digital medical records for physicians
+            Accede a tu espacio clínico en Canica
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error && <p className="text-small text-danger">{error}</p>}
+            {error && (
+              <p className="text-small text-danger" role="alert">
+                {error === "Login failed"
+                  ? "No pudimos iniciar sesión con esos datos."
+                  : error}
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -94,12 +100,12 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-small text-muted">
-            ¿No tenés cuenta?{" "}
+            ¿No tienes una cuenta?{" "}
             <a
               href="/signup"
               className="text-secondary hover:underline"
             >
-              Registrate
+              Regístrate
             </a>
           </p>
         </CardFooter>

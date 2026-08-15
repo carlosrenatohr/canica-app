@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from "react";
 import {
   Button,
-  Badge,
   Card,
   CardContent,
   CardHeader,
@@ -142,12 +141,6 @@ export default function PatientDetailPage({
       icon: FileText,
       path: `/patients/${patient.id}/consultations`,
     },
-    {
-      id: "documents",
-      label: "Documentos",
-      icon: FileText,
-      path: `/patients/${patient.id}/documents`,
-    },
   ];
   const activeTab = tabs.find((t) => pathname === t.path)?.id ?? "summary";
 
@@ -175,11 +168,6 @@ export default function PatientDetailPage({
               )}
             </p>
           </div>
-          {patient.identifier && (
-            <Badge variant="neutral" className="ml-2">
-              activo
-            </Badge>
-          )}
         </div>
 
         {/* Tabs for progressive disclosure (DS principle #1: calm before information) */}
@@ -249,7 +237,9 @@ export default function PatientDetailPage({
               </dl>
               <div className="border-t pt-3">
                 <p className="text-xs text-muted">Alergias</p>
-                <p className="text-small">Ninguna registrada</p>
+                <p className="text-small text-muted">
+                  No disponible en los datos actuales.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { authClient } from "@/lib/auth-client";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes (DS Fase 5)
 const WARNING_BEFORE = 30 * 1000; // warn 30s before (DS Fase 5)
@@ -11,6 +12,8 @@ export function SessionTimeout() {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const warningShownRef = useRef(false);
+  const continueBtnRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const clearAllTimers = useCallback(() => {
     if (timeoutRef.current) {
@@ -23,8 +26,9 @@ export function SessionTimeout() {
     }
   }, []);
 
-  const redirectToLogin = useCallback(() => {
+  const redirectToLogin = useCallback(async () => {
     clearAllTimers();
+    await authClient.signOut().catch(() => undefined);
     window.location.href = "/login";
   }, [clearAllTimers]);
 
@@ -58,6 +62,49 @@ export function SessionTimeout() {
       showWarningModal();
     }, INACTIVITY_TIMEOUT - WARNING_BEFORE);
   }, [clearAllTimers, showWarningModal]);
+
+  // Focus the continue button when the warning dialog opens
+  useEffect(() => {
+    if (showWarning) {
+      // Small delay to ensure the DOM is ready
+      const raf = requestAnimationFrame(() => {
+        continueBtnRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [showWarning]);
+
+  // Focus trap: cycle Tab within the dialog
+  useEffect(() => {
+    if (!showWarning) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showWarning]);
 
   // Handle visibility change (HIPAA: lock when physician walks away)
   const handleVisibilityChange = useCallback(() => {
@@ -104,29 +151,35 @@ export function SessionTimeout() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm"
       role="alertdialog"
       aria-modal="true"
-      aria-label="Sesión por expirar"
+      aria-labelledby="session-timeout-title"
+      aria-describedby="session-timeout-description"
     >
-      <div className="w-full max-w-sm rounded-[var(--radius-dialog)] bg-surface p-6 shadow-lg">
-        <h2 className="text-h3 font-semibold text-primary">
+      <div
+        ref={dialogRef}
+        className="w-full max-w-sm rounded-[var(--radius-dialog)] bg-surface p-6 shadow-lg"
+        tabIndex={-1}
+      >
+        <h2 id="session-timeout-title" className="text-h3 font-semibold text-primary">
           Sesión por expirarse
         </h2>
-        <p className="mt-2 text-small text-muted-foreground">
+        <p id="session-timeout-description" className="mt-2 text-small text-muted-foreground">
           Tu sesión expirará en{" "}
           <span className="font-medium text-primary">{remainingSeconds}s</span>{" "}
           por inactividad.
         </p>
         <div className="mt-4 flex gap-2">
           <button
-            className="inline-flex h-9 px-4 items-center justify-center rounded-[var(--radius-button)] bg-primary text-white text-small font-medium hover:bg-primary-hover motion-button focus-visible:ring-2 focus-visible:ring-ring"
+            ref={continueBtnRef}
+            className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-[var(--radius-button)] bg-primary text-button-text text-small font-medium hover:bg-primary-hover motion-button focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             onClick={resetTimer}
           >
             Continuar sesión
           </button>
           <button
-            className="inline-flex h-9 px-4 items-center justify-center rounded-[var(--radius-button)] border border-border bg-transparent text-small font-medium hover:bg-secondary/5 motion-button focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-11 min-w-[120px] items-center justify-center rounded-[var(--radius-button)] border border-border bg-transparent text-small font-medium hover:bg-secondary/5 motion-button focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             onClick={redirectToLogin}
           >
             Cerrar sesión

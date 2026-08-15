@@ -196,7 +196,7 @@ export default function ConsultationDetailPage({
             variant="outline"
             size="sm"
             onClick={async () => {
-              const res = await fetch(
+              const res = await apiFetch(
                 `/api/consultations/${consultationId}/export/pdf`,
                 {
                   headers: { Accept: "application/pdf" },
