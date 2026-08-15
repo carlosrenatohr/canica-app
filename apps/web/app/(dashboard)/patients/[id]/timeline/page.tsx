@@ -117,7 +117,7 @@ export default function TimelinePage({ params }: { params: Promise<{ id: string 
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para ver el historial clínico.
         </p>
@@ -128,7 +128,7 @@ export default function TimelinePage({ params }: { params: Promise<{ id: string 
   const displayName = patient ? `${patient.firstName} ${patient.lastName}` : "";
 
   return (
-    <main className="p-8 space-y-6 max-w-5xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">
           Historial clínico{displayName ? ` de ${displayName}` : ""}

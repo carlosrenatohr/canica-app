@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <main className="p-6 sm:p-8">
+      <main className="max-w-7xl space-y-8">
         <p className="text-muted" role="status">
           Se necesita una sesión activa para ver este resumen.
         </p>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="max-w-7xl space-y-8 p-6 sm:p-8" aria-busy="true">
+      <main className="max-w-7xl space-y-8" aria-busy="true">
         <div className="space-y-3">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-5 w-80" />
@@ -172,7 +172,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <main className="max-w-3xl space-y-4 p-6 sm:p-8">
+      <main className="max-w-3xl space-y-4">
         <div>
           <p className="text-h3 font-semibold text-text">No se pudo cargar el resumen</p>
           <p className="mt-2 text-small text-muted">
@@ -239,7 +239,7 @@ export default function DashboardPage() {
   }>;
 
   return (
-    <main className="max-w-7xl space-y-8 p-6 sm:p-8">
+    <main className="max-w-7xl space-y-8">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-caption font-semibold uppercase tracking-[0.16em] text-primary">

@@ -137,7 +137,7 @@ export default function ConsultationDetailPage({
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para ver esta consulta.
         </p>
@@ -147,7 +147,7 @@ export default function ConsultationDetailPage({
 
   if (loading) {
     return (
-      <main className="p-8">
+      <main>
         <div className="space-y-4">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-64 w-full" />
@@ -158,21 +158,21 @@ export default function ConsultationDetailPage({
   }
   if (error) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-danger">Error: {error}</p>
       </main>
     );
   }
   if (!consultation) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">Consulta no encontrada.</p>
       </main>
     );
   }
 
   return (
-    <main className="p-8 space-y-6 max-w-5xl">
+    <main className="space-y-6">
       {/* Consultation header with primary action prominent (DS principle #4) */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -65,7 +65,7 @@ export default function PatientsPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted">Debes iniciar sesión para ver pacientes.</p>
       </main>
     );
@@ -76,7 +76,7 @@ export default function PatientsPage() {
   );
 
   return (
-    <main className="p-8 space-y-6 max-w-7xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">Pacientes</h1>
         <Button variant="primary" onClick={() => router.push("/patients/new")}>

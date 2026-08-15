@@ -94,7 +94,7 @@ export default function ConsultationsListPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para ver las consultas.
         </p>
@@ -104,7 +104,7 @@ export default function ConsultationsListPage() {
 
   if (loading) {
     return (
-      <main className="p-8 space-y-6 max-w-5xl">
+      <main className="space-y-6" aria-busy="true">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-10 w-36" />
@@ -120,14 +120,22 @@ export default function ConsultationsListPage() {
 
   if (error) {
     return (
-      <main className="p-8">
-        <p className="text-danger">Error: {error}</p>
+      <main>
+        <Card role="alert">
+          <CardHeader>
+            <CardTitle>Error al cargar las consultas</CardTitle>
+            <p className="text-small text-muted">{error}</p>
+            <Button variant="outline" size="sm" className="mt-2 w-fit" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </CardHeader>
+        </Card>
       </main>
     );
   }
 
   return (
-    <main className="p-8 space-y-6 max-w-5xl">
+    <main className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-display font-semibold text-primary">Consultas</h1>
       </div>

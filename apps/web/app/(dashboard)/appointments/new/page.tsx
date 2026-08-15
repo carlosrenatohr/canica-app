@@ -52,7 +52,7 @@ export default function NewAppointmentPage() {
 
   if (!session) {
     return (
-      <main className="p-8">
+      <main>
         <p className="text-muted-foreground">
           Debes iniciar sesión para crear una cita.
         </p>
@@ -86,7 +86,7 @@ export default function NewAppointmentPage() {
   };
 
   return (
-    <main className="p-8 max-w-2xl">
+    <main className="max-w-2xl">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
           <CalendarPlus className="h-5 w-5" />

@@ -180,7 +180,7 @@ export default function AuditLogPage() {
 
   if (!session) {
     return (
-      <main className="p-6 sm:p-8">
+      <main>
         <p className="text-muted" role="status">
           Se necesita una sesión activa para ver el registro de auditoría.
         </p>
@@ -189,7 +189,7 @@ export default function AuditLogPage() {
   }
 
   return (
-    <main className="max-w-7xl space-y-6 p-6 sm:p-8">
+    <main className="space-y-6">
       <header className="flex items-start gap-3">
         <span className="rounded-[var(--radius-button)] bg-primary-light p-2.5 text-primary">
           <Shield className="h-5 w-5" aria-hidden="true" />
@@ -311,61 +311,63 @@ export default function AuditLogPage() {
           icon={<Shield className="h-10 w-10 text-muted" aria-hidden="true" />}
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead scope="col">Fecha</TableHead>
-              <TableHead scope="col">Acción</TableHead>
-              <TableHead scope="col">Entidad</TableHead>
-              <TableHead scope="col">Actor</TableHead>
-              <TableHead scope="col">Resumen</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="whitespace-nowrap text-muted">
-                  <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
-                </TableCell>
-                <TableCell>
-                  <div className="flex min-w-44 items-center gap-2">
-                    <Badge variant={actionVariant(log.action)} className="gap-1.5">
-                      {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
-                      {actionLabel(log.action)}
-                    </Badge>
-                    {!ACTION_LABELS[log.action] && (
-                      <code className="text-caption text-muted">{log.action}</code>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="min-w-36 space-y-1">
-                    <span className="block font-medium">{entityLabel(log.targetEntity)}</span>
-                    {!ENTITY_LABELS[log.targetEntity] && (
-                      <code className="block text-caption text-muted">{log.targetEntity}</code>
-                    )}
-                    {log.targetId && (
-                      <code className="block break-all text-caption text-muted" title={log.targetId}>
-                        {log.targetId}
-                      </code>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="min-w-36 space-y-1">
-                    <span className="block text-small text-muted">Usuario no resuelto</span>
-                    <code className="block break-all text-caption text-muted" title={log.actorId}>
-                      {log.actorId}
-                    </code>
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-56 text-muted">
-                  {log.summary || "Sin resumen disponible"}
-                </TableCell>
+        <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">Fecha</TableHead>
+                <TableHead scope="col">Acción</TableHead>
+                <TableHead scope="col">Entidad</TableHead>
+                <TableHead scope="col">Actor</TableHead>
+                <TableHead scope="col">Resumen</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="whitespace-nowrap text-muted">
+                    <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex min-w-44 items-center gap-2">
+                      <Badge variant={actionVariant(log.action)} className="gap-1.5">
+                        {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
+                        {actionLabel(log.action)}
+                      </Badge>
+                      {!ACTION_LABELS[log.action] && (
+                        <code className="text-caption text-muted">{log.action}</code>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="min-w-36 space-y-1">
+                      <span className="block font-medium">{entityLabel(log.targetEntity)}</span>
+                      {!ENTITY_LABELS[log.targetEntity] && (
+                        <code className="block text-caption text-muted">{log.targetEntity}</code>
+                      )}
+                      {log.targetId && (
+                        <code className="block break-all text-caption text-muted" title={log.targetId}>
+                          {log.targetId}
+                        </code>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="min-w-36 space-y-1">
+                      <span className="block text-small text-muted">Usuario no resuelto</span>
+                      <code className="block break-all text-caption text-muted" title={log.actorId}>
+                        {log.actorId}
+                      </code>
+                    </div>
+                  </TableCell>
+                  <TableCell className="min-w-56 text-muted">
+                    {log.summary || "Sin resumen disponible"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </main>
   );
