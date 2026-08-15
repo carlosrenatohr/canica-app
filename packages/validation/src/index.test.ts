@@ -109,7 +109,7 @@ describe("CreateAppointmentInput", () => {
   const BASE = {
     patientId: "019010d8-5215-4a53-9d90-8b85b3f26034",
     providerId: "019010d8-5215-4a53-9d90-8b85b3f26034",
-    startDate: "2025-02-01T09:00:00.000Z",
+    startDate: "2025-02-01T09:00",
   };
 
   it("accepts a scheduled appointment", () => {
