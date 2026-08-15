@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/lib/auth-client";
+import { usePathname } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@canica/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -11,11 +10,12 @@ import {
   Users,
   Calendar,
   Shield,
-  Settings,
-  LogOut,
   Menu,
   X,
   ClipboardList,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Logo } from "@canica/ui";
 
@@ -26,213 +26,167 @@ interface NavItem {
 }
 
 const commonNav: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: Home },
+  { label: "Resumen", href: "/dashboard", icon: Home },
   { label: "Pacientes", href: "/patients", icon: Users },
   { label: "Citas", href: "/appointments", icon: Calendar },
   { label: "Consultas", href: "/consultations", icon: ClipboardList },
   { label: "Auditoría", href: "/audit", icon: Shield },
-];
-
-const adminNav: NavItem[] = [
-  ...commonNav,
   { label: "Configuración", href: "/settings", icon: Settings },
 ];
 
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < breakpoint);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
 export function Sidebar() {
-  const { data: session } = authClient.useSession();
-  const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const isMobile = useIsMobile();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => setMounted(true), []);
-
-  // Close mobile drawer on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Close mobile drawer on escape
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileOpen(false);
+    if (!mobileOpen) return;
+
+    closeButtonRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      mobileTriggerRef.current?.focus();
     };
-    if (mobileOpen) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
   }, [mobileOpen]);
 
-  const user = session?.user as { role?: string } | undefined;
-  const role = user?.role ?? "doctor";
-  const nav = role === "administrator" ? adminNav : commonNav;
-
-  if (!session || !mounted) {
-    return (
-      <aside className="flex h-screen w-16 flex-col items-center gap-4 border-r bg-surface p-3">
-        <Link href="/" className="text-xl font-semibold text-primary">
-          <Logo size={28} />
-        </Link>
-      </aside>
-    );
-  }
-
-  // Mobile: drawer overlay
-  if (isMobile) {
-    return (
-      <>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="fixed left-4 top-4 z-40 h-10 w-10 p-0 md:hidden"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menú"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {mobileOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm md:hidden"
-            onClick={() => setMobileOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        <aside
-          className={cn(
-            "fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r bg-surface motion-dialog md:hidden",
-            mobileOpen ? "translate-x-0" : "-translate-x-full",
-          )}
-        >
-          <div className="flex items-center justify-between px-3 py-2">
-            <div className="flex items-center gap-3">
-              <Logo size={28} />
-              <span className="text-xl font-semibold">Canica</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Cerrar menú"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
-            {nav.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href}>
-                  <Button
-                    variant={active ? "secondary" : "ghost"}
-                    className="w-full justify-start gap-3"
-                    size="sm"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="flex flex-col gap-1 p-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3"
-              size="sm"
-              onClick={async () => {
-                await authClient.signOut();
-                window.location.href = "/login";
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Cerrar sesión</span>
-            </Button>
-          </div>
-        </aside>
-      </>
-    );
-  }
-
-  // Desktop: collapsible sidebar
   return (
-    <aside
-      className={cn(
-        "flex h-screen flex-col justify-between border-r bg-surface transition-[width] duration-200 ease-out",
-        collapsed ? "w-[72px]" : "w-[260px]",
-      )}
-    >
-      <div className="flex flex-col gap-2">
-        <div
-          className={cn(
-            "flex items-center gap-3 px-3 py-2",
-            collapsed ? "justify-center" : "",
-          )}
-        >
-          <Logo size={28} />
-          {!collapsed && <span className="text-xl font-semibold">Canica</span>}
+    <>
+      <aside
+        className={cn(
+          "hidden h-dvh flex-shrink-0 flex-col justify-between border-r bg-surface transition-[width] duration-200 ease-out md:flex",
+          collapsed ? "w-[72px]" : "w-[260px]",
+        )}
+      >
+        <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
+          <div
+            className={cn(
+              "flex min-h-16 items-center gap-3 px-3 py-2",
+              collapsed ? "justify-center" : "",
+            )}
+          >
+            <Link href="/dashboard" aria-label="Ir al resumen">
+              <Logo size={28} />
+            </Link>
+            {!collapsed && <span className="text-xl font-semibold">Canica</span>}
+          </div>
+          <nav aria-label="Navegación principal" className="flex flex-col gap-1 p-2">
+            {commonNav.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                collapsed={collapsed}
+              />
+            ))}
+          </nav>
         </div>
-        <nav className="flex flex-col gap-1 p-2">
-          {nav.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant={active ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-3"
-                  size="sm"
-                >
-                  <item.icon className="h-4 w-4" />
-                  {!collapsed && <span>{item.label}</span>}
-                </Button>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+            title={collapsed ? "Expandir menú" : "Contraer menú"}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </aside>
 
-      <div className="flex flex-col gap-1 p-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3"
-          size="sm"
-          onClick={async () => {
-            await authClient.signOut();
-            window.location.href = "/login";
-          }}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span>Cerrar sesión</span>}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="justify-center"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      </div>
-    </aside>
+      <Button
+        ref={mobileTriggerRef}
+        variant="ghost"
+        size="icon"
+        className="fixed left-3 top-3 z-40 md:hidden"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menú de navegación"
+        aria-expanded={mobileOpen}
+        aria-controls="mobile-navigation"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-overlay backdrop-blur-sm transition-opacity md:hidden",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+
+      <aside
+        id="mobile-navigation"
+        aria-label="Navegación principal"
+        aria-hidden={!mobileOpen}
+        inert={!mobileOpen}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-[min(86vw,260px)] flex-col border-r bg-surface transition-transform md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex min-h-16 items-center justify-between border-b border-border px-3 py-2">
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Ir al resumen">
+            <Logo size={28} />
+            <span className="text-xl font-semibold">Canica</span>
+          </Link>
+          <Button
+            ref={closeButtonRef}
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Cerrar menú de navegación"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+          {commonNav.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
+          ))}
+        </nav>
+      </aside>
+    </>
+  );
+}
+
+function NavLink({
+  item,
+  pathname,
+  collapsed = false,
+}: {
+  item: NavItem;
+  pathname: string;
+  collapsed?: boolean;
+}) {
+  const active =
+    pathname === item.href ||
+    (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
+
+  return (
+    <Button
+      asChild
+      variant={active ? "secondary" : "ghost"}
+      className={cn("w-full justify-start gap-3", collapsed && "justify-center")}
+      size="sm"
+    >
+      <Link href={item.href} aria-current={active ? "page" : undefined}>
+        <item.icon className="h-4 w-4 flex-shrink-0" />
+        {!collapsed && <span>{item.label}</span>}
+      </Link>
+    </Button>
   );
 }
