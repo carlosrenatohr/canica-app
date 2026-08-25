@@ -72,7 +72,7 @@ risk: high
 | 6 | Dashboard, lists, clinical detail, audit | verified | primary/agent C | Phases 2–5 |
 | 7 | Settings and account experience | verified | parallel agent B | Phase 4 |
 | 8 | Patient documents and storage | blocked until contract gate | specialist agent | security/domain/storage review |
-| 9 | Responsive and accessibility hardening | planned | QA agent | Phases 3–8 |
+| 9 | Responsive and accessibility hardening | in-progress | QA agent | Phases 3–8 |
 | 10 | Visual polish and regression closure | planned | primary + reviewer | all prior phases |
 
 ## Phase 0 Completed Work
@@ -140,8 +140,38 @@ risk: high
 3. Add authenticated E2E coverage for the work completed so far (login → dashboard → patient CRUD → appointment create/detail → consultation create).
 4. Investigate the storage/API/security contract for patient Documents before assigning implementation.
 5. Add actor-name resolution only if the audit API can expose it without weakening organization scoping or PHI rules.
-6. Responsive and accessibility hardening (Phase 9): keyboard navigation, ARIA landmarks, focus management, responsive breakpoints.
+6. **Responsive and accessibility hardening (Phase 9): in progress — audit table responsive, keyboard nav tests, focus trap tests, touch targets, reduced motion.**
 7. Visual polish and regression closure (Phase 10): dark/light screenshot audit, spacing consistency, animation polish.
+
+## Phase 9 Progress — Responsive + Accessibility Hardening (2026-08-25)
+
+### Completed
+- **Audit table responsive**: desktop table (lg:), mobile cards (lg:hidden) with proper ARIA roles (`role="list"` + `role="listitem"`).
+- **Accessibility e2e test suite expanded** (`apps/web/e2e/accessibility.spec.ts`):
+  - Dashboard keyboard navigation (main landmarks, nav links)
+  - Sidebar nav links keyboard accessible
+  - Topbar search keyboard accessible
+  - User menu dialog focus trap (ArrowUp/Down, Escape, return focus)
+  - Mobile sidebar drawer focus trap (Escape, return focus)
+  - Audit page table/card semantics verification
+  - Audit filter controls accessible labels
+  - Settings theme toggle accessible name
+  - Patient form field labels + error association (aria-describedby)
+  - Focus-visible styles verification on interactive elements
+  - Reduced motion preference respected (transitionDuration near-zero)
+  - Touch targets minimum 44px verification
+
+### Verification
+- `pnpm typecheck` ✅
+- `pnpm test` (validation 17/17, web 2/2) ✅
+- `pnpm build` ✅ (19 routes)
+- E2E accessibility tests ready to run (require authenticated session + API)
+
+### Remaining in Phase 9
+- Keyboard-only navigation audit on all core journeys (manual verification)
+- Mobile/tablet breakpoint testing (320, 390, 768, 1024, 1440px) — blocked by Playwright MCP browser issue
+- Dialog focus trap verification on all dialogs (patient archive, session timeout, appointment actions)
+- ARIA landmarks audit (role="main", role="navigation", role="search", etc.)
 
 ## Documents Contract Assessment
 

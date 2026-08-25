@@ -324,7 +324,7 @@ export default function AuditLogPage() {
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border">
+          <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border hidden lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -380,6 +380,46 @@ export default function AuditLogPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile: card-based layout */}
+          <div className="lg:hidden space-y-3" role="list" aria-label="Registros de auditoría">
+            {filtered.map((log) => (
+              <Card key={log.id} variant="elevated" className="p-4" role="listitem">
+                <div className="flex items-start gap-3">
+                  <time className="flex-shrink-0 whitespace-nowrap text-caption text-muted" dateTime={log.createdAt}>
+                    {formatDate(log.createdAt)}
+                  </time>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={actionVariant(log.action)} className="gap-1.5">
+                        {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
+                        {actionLabel(log.action)}
+                      </Badge>
+                      {!ACTION_LABELS[log.action] && (
+                        <code className="text-caption text-muted">{log.action}</code>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-caption">
+                      <div>
+                        <span className="text-muted">Entidad</span>
+                        <div className="font-medium">{entityLabel(log.targetEntity)}</div>
+                        {!ENTITY_LABELS[log.targetEntity] && (
+                          <code className="text-muted">{log.targetEntity}</code>
+                        )}
+                        {log.targetId && <code className="break-all text-muted" title={log.targetId}>{log.targetId}</code>}
+                      </div>
+                      <div>
+                        <span className="text-muted">Actor</span>
+                        <div className="font-medium">Usuario no resuelto</div>
+                        <code className="break-all text-muted" title={log.actorId}>{log.actorId}</code>
+                      </div>
+                    </div>
+                    <div className="text-muted break-words">{log.summary || "Sin resumen disponible"}</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
           <Pagination
             current={page}
