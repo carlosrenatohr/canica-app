@@ -1,7 +1,7 @@
 # Canica UI/UX Refresh Progress
 
 **Status:** In progress  
-**Source plan:** `260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`  
+**Source plan:** `docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`  
 **Started:** 2026-08-14  
 **Owner:** Implementation agent under human review
 
@@ -81,7 +81,7 @@ risk: high
 - Read architecture, design-system, security, domain, roadmap, and tech-stack specs.
 - Consulted Codebase Memory for architecture and route discovery.
 - Audited the actual frontend screens, shared UI package, scripts, tests, and Playwright setup.
-- Created and reviewed `260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`.
+- Created and reviewed `docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`.
 - Confirmed that the requested palette, Spanish-neutral language, complete dark mode, P0 fixes, complete routes, API-minimal support, and authenticated E2E scope are part of this work.
 
 ## Phase 0 Current Blockers

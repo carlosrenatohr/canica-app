@@ -3,6 +3,13 @@
 ### Internal Design Document
 Version: 0.1 (Draft)
 
+> **⚠️ Deprecated (2026-08-25):** This document has been superseded by:
+> - **`.specs/design-system.md` v1.1** — approved Canica Clinical palette and design direction
+> - **`docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`** — comprehensive audit and action plan
+> - **`docs/ui-ux-refresh-progress.md`** — implementation tracker
+>
+> This file is kept for historical reference only. Do not use as a source of truth.
+
 ---
 
 # Philosophy

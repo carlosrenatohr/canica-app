@@ -1,5 +1,12 @@
 # Plan de Implementación — Canica Design System v1
 
+> **⚠️ Deprecated (2026-08-25):** This implementation plan has been superseded by:
+> - **`docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`** — the approved action plan
+> - **`docs/ui-ux-refresh-progress.md`** — implementation tracker (Phases 0–7 verified)
+>
+> All work described here was completed and absorbed into the UI/UX refresh phases.
+> This file is kept for historical reference only.
+
 ## Auditoría del Estado Actual
 
 ### Lo que existe hoy

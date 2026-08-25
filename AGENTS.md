@@ -11,15 +11,48 @@ Product and architecture truth lives in **`.specs/`**. Do not duplicate it here.
 
 ## MCP tooling (canonical usage)
 
-- **Code discovery: `codebase-memory` MCP is the first-class tool.** Prefer its graph tools
-  over raw `grep`/`glob`/file-search: `search_graph` → `trace_path` → `get_code_snippet` →
-  `query_graph` → `get_architecture`. Fall back to grep/glob only when searching string
-  literals, error messages, config values, or non-code files. Rules live in the global
-  `~/.config/opencode/AGENTS.md`.
+- **Code discovery: `codebase-memory` MCP is the mandatory first source of truth.** Before
+  using `grep`, `glob`, or file-search, **always** consult the codebase-memory graph first:
+  `search_graph` → `trace_path` → `get_code_snippet` → `query_graph` → `get_architecture`.
+  Fall back to grep/glob **only** when:
+  - Searching string literals, error messages, or config values
+  - Searching non-code files (Dockerfiles, shell scripts, configs)
+  - The MCP tool returns insufficient results (then retry with broader queries first)
+  This rule is non-negotiable. The graph is the structural source of truth for the codebase.
 - **Cloudflare:** use the Cloudflare MCP when configured (task `board.md` W5). Until it is
   installed, rely on the `cloudflare` / `wrangler` / `workers-best-practices` skills.
 - **Browser verification:** Playwright MCP (`playwright_browser_*` tools). See
   `docs/how-to/development.md` for the known Chrome channel issue (task `board.md` Q1).
+
+---
+
+## Verification gate (run before every task)
+
+Before starting any new development task, **verify the app is healthy**. If checks fail, fix them first — do not layer new work on a broken foundation.
+
+```bash
+pnpm typecheck          # must pass
+pnpm test               # must pass (or document pre-existing failures)
+pnpm --filter @canica/web build   # must pass
+pnpm --filter @canica/web e2e     # run when API is available; document env blockers
+```
+
+**Rule:** if `typecheck`, `test`, or `build` fail, that is the task. Do not proceed to new features until the baseline is green. E2E failures caused by missing infrastructure (API not running, browser not available) are documented, not fixed in-place.
+
+---
+
+## Progress update rule (mandatory after every task)
+
+After completing any task (code, docs, spec, or config change), update the relevant progress tracker **before starting the next task**. Do not skip this step.
+
+| Scope | Update |
+| --- | --- |
+| Milestone work (M0–M17) | `docs/progress.md` — status, verification, commit |
+| UI/UX refresh phases | `docs/ui-ux-refresh-progress.md` — phase status, files changed, checks run |
+| Board-tracked tasks | `board.md` — status column, branch, PR |
+| Backlog discoveries | `docs/backlog.md` — new items with `[ ]` prefix |
+
+If a task reveals new gaps, add them to the appropriate tracker immediately. Do not rely on memory or chat history.
 
 ---
 

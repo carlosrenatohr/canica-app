@@ -76,3 +76,4 @@ supabase/.temp
 # Agent tooling local state
 .agents/
 skills-lock.json
+*.tgz
