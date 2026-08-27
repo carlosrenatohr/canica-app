@@ -7,6 +7,13 @@ import * as consultationsRepo from "@canica/db/repos/consultations";
 import * as medicalRecordsRepo from "@canica/db/repos/medical-records";
 import * as appointmentsRepo from "@canica/db/repos/appointments";
 import * as documentExportsRepo from "@canica/db/repos/document-exports";
+import * as attachmentsRepo from "@canica/db/repos/attachments";
+import {
+  createStorageConfigFromEnv,
+  uploadAttachment,
+  getSignedUrl,
+  deleteAttachment as deleteStorageObject,
+} from "@canica/storage";
 import { writeAudit, listAuditLogs } from "@canica/db/repos/audit";
 import {
   CreatePatientInput,
@@ -503,6 +510,145 @@ app.post("/consultations/:id/export/pdf", requirePermission(Permission.CONSULTAT
     },
   });
 });
+
+// ---- Attachments (Phase 8: Documents with Supabase Storage) ----
+
+app.post("/attachments", requirePermission(Permission.ATTACHMENT_WRITE), async (c) => {
+  const body = await c.req.parseBody({ all: true });
+  const file = body.file;
+  if (!file || typeof (file as Blob).arrayBuffer !== "function") {
+    return c.json({ error: "missing_file" }, 400);
+  }
+  const patientId = typeof body.patientId === "string" ? body.patientId : undefined;
+  const consultationId =
+    typeof body.consultationId === "string" ? body.consultationId : undefined;
+
+  if (!patientId) return c.json({ error: "patient_required" }, 400);
+
+  const patient = await patientsRepo.getPatient(c.var.db, c.var.actor.organizationId, patientId);
+  if (!patient) return c.json({ error: "patient_not_found" }, 404);
+
+  const blob = file as Blob & { name?: string };
+  const buffer = Buffer.from(await blob.arrayBuffer());
+  const filename = blob.name ?? "upload.bin";
+  const contentType = blob.type || "application/octet-stream";
+
+  const config = createStorageConfigFromEnv();
+  const result = await uploadAttachment(
+    config,
+    c.var.actor.organizationId,
+    patientId,
+    buffer,
+    filename,
+    contentType
+  );
+
+  const row = await attachmentsRepo.createAttachment(c.var.db, c.var.actor.organizationId, {
+    patientId,
+    consultationId,
+    path: result.path,
+    mimeType: contentType,
+    sizeBytes: buffer.length,
+    uploadedBy: c.var.actor.userId,
+  });
+
+  await writeAudit(c.var.db, {
+    organizationId: c.var.actor.organizationId,
+    actorId: c.var.actor.userId,
+    action: "attachment.upload",
+    targetEntity: "attachment",
+    targetId: row.id,
+    summary: `${filename} (${(buffer.length / 1024).toFixed(0)} KB)`,
+    ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+    userAgent: c.req.header("user-agent"),
+  });
+
+  return c.json(row, 201);
+});
+
+app.get(
+  "/patients/:id/attachments",
+  requirePermission(Permission.ATTACHMENT_READ),
+  async (c) => {
+    const patient = await patientsRepo.getPatient(
+      c.var.db,
+      c.var.actor.organizationId,
+      c.req.param("id")
+    );
+    if (!patient) return c.json({ error: "patient_not_found" }, 404);
+
+    const limit = Number(c.req.query("limit") ?? 20);
+    const offset = Number(c.req.query("offset") ?? 0);
+    const { data, total } = await attachmentsRepo.listAttachmentsByPatient(
+      c.var.db,
+      c.var.actor.organizationId,
+      c.req.param("id"),
+      { limit, offset }
+    );
+    return c.json({ data, total });
+  }
+);
+
+app.get(
+  "/attachments/:id/signed-url",
+  requirePermission(Permission.ATTACHMENT_READ),
+  async (c) => {
+    const attachment = await attachmentsRepo.getAttachment(
+      c.var.db,
+      c.var.actor.organizationId,
+      c.req.param("id")
+    );
+    if (!attachment) return c.json({ error: "not_found" }, 404);
+
+    const config = createStorageConfigFromEnv();
+    const { signedUrl, expiresAt } = await getSignedUrl(config, attachment.path, 3600);
+
+    await writeAudit(c.var.db, {
+      organizationId: c.var.actor.organizationId,
+      actorId: c.var.actor.userId,
+      action: "attachment.read",
+      targetEntity: "attachment",
+      targetId: attachment.id,
+      ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+      userAgent: c.req.header("user-agent"),
+    });
+
+    return c.json({ signedUrl, expiresAt });
+  }
+);
+
+app.delete(
+  "/attachments/:id",
+  requirePermission(Permission.ATTACHMENT_WRITE),
+  async (c) => {
+    const attachment = await attachmentsRepo.getAttachment(
+      c.var.db,
+      c.var.actor.organizationId,
+      c.req.param("id")
+    );
+    if (!attachment) return c.json({ error: "not_found" }, 404);
+
+    const config = createStorageConfigFromEnv();
+    await deleteStorageObject(config, attachment.path);
+    await attachmentsRepo.deleteAttachment(
+      c.var.db,
+      c.var.actor.organizationId,
+      c.req.param("id")
+    );
+
+    await writeAudit(c.var.db, {
+      organizationId: c.var.actor.organizationId,
+      actorId: c.var.actor.userId,
+      action: "attachment.delete",
+      targetEntity: "attachment",
+      targetId: attachment.id,
+      ip: c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip"),
+      userAgent: c.req.header("user-agent"),
+    });
+
+    return c.body(null, 204);
+  }
+);
 
 app.use("/audit/*", sessionMiddleware());
 
