@@ -219,13 +219,12 @@ and audit events.
 - **8.2** Attachment repository in `packages/db` (`packages/db/src/repos/attachments.ts`, CRUD org-scoped, exported from index)
 - **8.3** API routes in `apps/api` (`POST /attachments`, `GET /patients/:id/attachments`, `GET /attachments/:id/signed-url`, `DELETE /attachments/:id`)
 - **8.4** Audit events wired: `attachment.upload`, `attachment.read`, `attachment.delete`
+- **8.5** Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload dialog, download, delete) — merged in PR #29
+- **8.6** Patient detail "Documentos" tab links to real route — merged in PR #29
+- **8.2–8.6 hardening (post-merge):** store original `fileName` on attachments (`packages/db` schema + migration `0004_chemical_starbolt.sql` + repo + API + UI + `@canica/types`), so the Documents list shows the real filename instead of the storage-path basename. Migration must be applied on Supabase setup (`pnpm --filter @canica/db db:migrate`).
 
 ### In Progress
-- **8.5** Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx`
-
-### Planned
-- **8.6** Update patient detail Documents tab to link to real route
-- **8.7** E2E tests for documents flow
+- **8.7** E2E tests for documents flow (`apps/web/e2e/documents.spec.ts`): upload, list, download (signed URL popup), delete. Requires API running + Supabase env.
 
 ### Dependencies
 - Supabase project already configured (DB + Storage in same project)

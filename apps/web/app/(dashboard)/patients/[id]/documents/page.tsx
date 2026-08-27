@@ -30,6 +30,7 @@ interface Attachment {
   id: string;
   patientId: string;
   consultationId: string | null;
+  fileName: string;
   path: string;
   mimeType: string;
   sizeBytes: number;
@@ -308,7 +309,7 @@ export default function PatientDocumentsPage({
                               {fileExtension(a.mimeType)}
                             </Badge>
                             <div className="font-medium">
-                              {a.path.split("/").pop() ?? "documento"}
+                              {a.fileName}
                             </div>
                           </div>
                         </td>

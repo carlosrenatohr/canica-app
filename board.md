@@ -92,7 +92,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 5 | Forms + patient workflows | ✅ Verified | PatientForm compartido, FormField, validación accesible |
 | 6 | Dashboard, lists, clinical detail, audit | ✅ Verified | summary endpoint, paginación, search, actor resolution, appointment detail |
 | 7 | Settings + account experience | ✅ Verified | `/settings`, theme persistence, profile/session |
-| 8 | Patient documents + storage | 🔄 In Progress | storage ✅ repo ✅ API ✅ audit ✅; UI in progress |
+| 8 | Patient documents + storage | 🔄 In Progress | storage ✅ repo ✅ API ✅ audit ✅ UI ✅; 8.7 E2E in progress |
 | 9 | Responsive + accessibility hardening | 🔄 In Progress | touch targets, contrast, aria-live, keyboard nav (commits `b1d6c4e`–`4ad42fd`) |
 | 10 | Visual polish + regression closure | 📋 Backlog | visual snapshots light/dark, spacing, animation polish |
 
@@ -109,9 +109,9 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 8.2 | Attachment repository in `packages/db` (CRUD, org-scoped) | `.specs/domain-model.md` | — | ✅ Done | — |
 | 8.3 | API routes in `apps/api` (POST /attachments upload, GET /attachments list, GET /attachments/:id signed URL, DELETE /attachments/:id) | `.specs/domain-model.md` + `.specs/security-hipaa.md` | — | ✅ Done | — |
 | 8.4 | Audit events: `attachment.upload`, `attachment.read`, `attachment.delete` | `.specs/security-hipaa.md` | — | ✅ Done | — |
-| 8.5 | Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete) | `.specs/domain-model.md` | — | 🔄 In Progress | — |
-| 8.6 | Update patient detail Documents tab to link to real route | `.specs/domain-model.md` | — | 📋 Backlog | — |
-| 8.7 | E2E tests for documents flow (upload, download, delete, permissions) | `.specs/agent-automation.md` | — | 📋 Backlog | — |
+| 8.5 | Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete) | `.specs/domain-model.md` | — | ✅ Done | #29 |
+| 8.6 | Update patient detail Documents tab to link to real route | `.specs/domain-model.md` | — | ✅ Done | #29 |
+| 8.7 | E2E tests for documents flow (upload, download, delete, permissions) | `.specs/agent-automation.md` | — | 🔄 In Progress | — |
 
 ---
 

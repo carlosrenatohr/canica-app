@@ -211,6 +211,7 @@ export const attachments = pgTable("attachments", {
   organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
   patientId: uuid("patient_id").references(() => patients.id),
   consultationId: uuid("consultation_id").references(() => consultations.id),
+  fileName: varchar("file_name", { length: 256 }).notNull(),
   path: varchar("path", { length: 1024 }).notNull(),
   mimeType: varchar("mime_type", { length: 256 }).notNull(),
   sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),

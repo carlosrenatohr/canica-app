@@ -546,6 +546,7 @@ app.post("/attachments", requirePermission(Permission.ATTACHMENT_WRITE), async (
   const row = await attachmentsRepo.createAttachment(c.var.db, c.var.actor.organizationId, {
     patientId,
     consultationId,
+    fileName: filename,
     path: result.path,
     mimeType: contentType,
     sizeBytes: buffer.length,

@@ -23,6 +23,7 @@ export async function createAttachment(
       organizationId,
       patientId: input.patientId,
       consultationId: input.consultationId,
+      fileName: input.fileName,
       path: input.path,
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
