@@ -13,6 +13,7 @@
     "@canica/auth": "workspace:*",
     "@canica/db": "workspace:*",
     "@canica/validation": "workspace:*",
+    "@canica/storage": "workspace:*",
     "@hono/node-server": "^2.0.12",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",

@@ -37,7 +37,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 04 | M15 PDF export consulta + audit + botón UI | `.specs/domain-model.md` | — | ✅ Done | #12 |
 | 05 | M16 Audit log query + UI `/audit` | `.specs/security-hipaa.md` | — | ✅ Done | #13 |
 | 06 | Design system: aplicación de tema (Canica Clinical palette, Geist, dark mode, `packages/ui`) — ver UI/UX Refresh abajo | `.specs/design-system.md` | — | ✅ Done | — |
-| 07 | Attachments (Phase 1): upload/list/download + Supabase Storage + UI | `.specs/domain-model.md` | — | 📋 Backlog | — |
+| 07 | Attachments (Phase 1): upload/list/download + Supabase Storage + UI | `.specs/domain-model.md` | — | 🔄 In Progress | — |
 | 08 | M15 completion: export de prescripción + persistir `document_exports` + listado descargable | `.specs/domain-model.md` | — | 📋 Backlog | — |
 | 09 | M14 leftovers: reminders (stub email) + link cita → consulta | `.specs/roadmap.md` (Phase 3) | — | 📋 Backlog | — |
 | 10 | M16 completion: audit login / failed-login / logout (hooks Better Auth) | `.specs/security-hipaa.md` | — | 📋 Backlog | — |
@@ -92,21 +92,36 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 5 | Forms + patient workflows | ✅ Verified | PatientForm compartido, FormField, validación accesible |
 | 6 | Dashboard, lists, clinical detail, audit | ✅ Verified | summary endpoint, paginación, search, actor resolution, appointment detail |
 | 7 | Settings + account experience | ✅ Verified | `/settings`, theme persistence, profile/session |
-| 8 | Patient documents + storage | ⏸️ Blocked | requiere contract gate (Supabase Storage, signed URLs, audit events) |
+| 8 | Patient documents + storage | 🔄 In Progress | storage: Supabase; `packages/storage` ✅; repo/API/UI pending |
 | 9 | Responsive + accessibility hardening | 🔄 In Progress | touch targets, contrast, aria-live, keyboard nav (commits `b1d6c4e`–`4ad42fd`) |
 | 10 | Visual polish + regression closure | 📋 Backlog | visual snapshots light/dark, spacing, animation polish |
 
-**Verification status (2026-08-25):** `pnpm typecheck` ✅ · `pnpm test` 19/19 ✅ · `pnpm build` ✅ (19 rutas) · `pnpm e2e` 7/15 passed (8 failed por API apagada en :3001, 8 skipped)
+**Verification status (2026-08-26):** `pnpm typecheck` ✅ · `pnpm test` 19/19 ✅ · `pnpm build` ✅ (19 rutas) · `pnpm e2e` 7/15 passed (8 failed por API apagada en :3001, 8 skipped)
+
+## Phase 8 — Documents (Supabase Storage)
+
+> Storage decision: **Supabase Storage** (same project as DB, BAA available, fits tech-stack).  
+> Specs updated: `.specs/architecture.md` (+`packages/storage`), `.specs/domain-model.md` (Attachment refs), `.specs/security-hipaa.md` (Storage section).
+
+| # | Task | Spec | Branch | Status | PR |
+|---|---|---|---|---|---|
+| 8.1 | Create `packages/storage` abstraction (Supabase Storage client, upload, signed URL, delete, list) | `.specs/architecture.md` | — | ✅ Done | — |
+| 8.2 | Attachment repository in `packages/db` (CRUD, org-scoped) | `.specs/domain-model.md` | — | 📋 Backlog | — |
+| 8.3 | API routes in `apps/api` (POST /attachments upload, GET /attachments list, GET /attachments/:id signed URL, DELETE /attachments/:id) | `.specs/domain-model.md` + `.specs/security-hipaa.md` | — | 📋 Backlog | — |
+| 8.4 | Audit events: `attachment.upload`, `attachment.read`, `attachment.delete` | `.specs/security-hipaa.md` | — | 📋 Backlog | — |
+| 8.5 | Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete) | `.specs/domain-model.md` | — | 📋 Backlog | — |
+| 8.6 | Update patient detail Documents tab to link to real route | `.specs/domain-model.md` | — | 📋 Backlog | — |
+| 8.7 | E2E tests for documents flow (upload, download, delete, permissions) | `.specs/agent-automation.md` | — | 📋 Backlog | — |
 
 ---
 
-## Notas / pendientes documentados hoy (2026-08-25)
+## Notas / pendientes documentados hoy (2026-08-26)
 
 - **UI/UX Refresh Phases 0–7 verificadas** — ver sección arriba y tracker detallado en `docs/ui-ux-refresh-progress.md`.
 - **Audit files movidos** a `docs/audits/2026-08-10-ui-ux/` (260810_CANICA_REFRESH_UIUX.md + 260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md).
 - **codebase-memory index actualizado** — 6946 nodos, 21438 edges, SHA `4ad42fd` (HEAD). Regla añadida a `AGENTS.md`: codebase-memory es el first source of truth para code discovery.
 - **AGENTS.md actualizado** con 3 nuevas reglas: (1) codebase-memory mandatory first, (2) verification gate antes de cada task, (3) progress update obligatorio post-task.
 - **E2E status**: 7 smoke tests pasan (anónimos), 8 authenticated tests fallan por API apagada (`ECONNREFUSED :3001`), 8 no corren. Necesita API corriendo para cobertura completa.
-- **Phase 8 (Documents) bloqueada** — requiere decisión de storage + spec gate antes de implementar.
+- **Phase 8 (Documents) en progreso** — decisión de storage: **Supabase Storage**. Specs actualizados (architecture, domain-model, security-hipaa). Implementando `packages/storage` + API + repo + UI.
 - **Lint Q6** sigue abierto — `@canica/api` y `@canica/config` fallan por "all files ignored".
 - **Playwright MCP Q1** sigue roto — Chrome binary no encontrado en `/opt/google/chrome/chrome`.

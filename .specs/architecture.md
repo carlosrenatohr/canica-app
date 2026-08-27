@@ -49,6 +49,7 @@ canica/
     types/               # Shared types
     validation/          # Shared Zod schemas
     ui/                  # Reusable UI (shadcn-based)
+    storage/             # Object storage abstraction (Supabase Storage)
     config/              # Shared config
     eslint/              # ESLint presets
     tsconfig/            # TSConfig presets
@@ -97,6 +98,7 @@ canica/
 | `sdk` | Typed GraphQL client / codegen output used by `web` (and future clients) |
 | `ui` | Reusable UI components and design tokens |
 | `ai` | Providers, agents, prompts, tools — no business logic leakage |
+| `storage` | Object storage abstraction (Supabase Storage) — upload, signed URLs, metadata |
 | `config` / `eslint` / `tsconfig` | Tooling consistency |
 
 ---
