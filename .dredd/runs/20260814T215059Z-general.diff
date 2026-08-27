@@ -1,0 +1,78 @@
+diff --git a/ONBOARDING.md b/ONBOARDING.md
+index ed234ae..bc277dd 100644
+--- a/ONBOARDING.md
++++ b/ONBOARDING.md
+@@ -1,6 +1,6 @@
+ # HIT CARGO — Onboarding & session handoff
+ 
+-Cómo retomar este workspace de forma ordenada — seas un colaborador o un agente IA nuevo. Lee esto primero, luego `CLAUDE.md` (raíz) y el `AGENTS.md` del repo que vayas a tocar.
++Cómo retomar este workspace de forma ordenada — seas un colaborador o un agente IA nuevo. Lee esto primero, luego `AGENTS.md` (raíz — **router**: contrato, gate, Do Not, mapa de delegación) y el `AGENTS.md`/README del repo que vayas a tocar.
+ 
+ > La verdad vive en el repo, los tests y el backlog — no en la memoria de ningún agente. Verifica con el gate (`pnpm check`), no confíes en la prosa. Las **cifras que caducan** (conteos de paquetes, fechas) son puntos en el tiempo: si necesitas el número exacto, córrelo contra la base, no lo cites de aquí.
+ 
+@@ -20,7 +20,14 @@ Cómo retomar este workspace de forma ordenada — seas un colaborador o un agen
+ 
+ ---
+ 
+-## 2. Estado actual (actualizado 2026-07-11)
++## 2. Estado actual (actualizado 2026-08-14)
++
++**Sesión 2026-08-14 — directrices Orbit + reestructuración de instrucciones (todo mergeado).**
++- **Directrices de arquitectura Orbit aprobadas e integradas** en el AGENTS.md raíz (y ADRs **009-011 obligatorios**): multi-tenancy (`organization_id` en toda entidad tenant-scoped; entidades globales justifican la excepción), abstracciones de proveedores (`Repository`/`StorageService`/`Logger` — InsForge es la implementación actual; scraper componente independiente reutilizable), IDs internos nunca en URLs (`public_id`/opaque ID; tokens/URLs firmadas solo para acceso temporal a privados), `audit_logs` con columnas relacionales + `metadata jsonb` (actor_id canónico, actor_email snapshot, actor_type user/system/service), sin infra nueva solo por free tiers.
++- **AGENTS.md raíz reestructurado como router** (696 → 125 líneas): contrato de workflow, tabla del gate, git order, branch naming, PRs y Do Not completos (verbatim) + mapa de delegación. Contenido profundo movido **verbatim** a `docs/` raíz: `architecture.md`, `dev-workflow.md`, `coding-standards.md`, `agent-workflow.md`, `project-knowledge.md`, `adr/001-011.md` + `README.md` índice. Verificación línea por línea sin pérdida. `docs/workflow/` = narrativa de onboarding de agentes (canónico de reglas: `docs/agent-workflow.md`).
++- **Punteros jerárquicos** agregados: `hit-ever2/AGENTS.md` + `README.md`, `hit-panel/README.md` (apuntan al router raíz y sus docs).
++- **PRs mergeados:** hit-workspace-meta [#4](https://github.com/carlosrenatohr/hit-workspace-meta/pull/4), hit-ever [#18](https://github.com/carlosrenatohr/hit-ever/pull/18), hit-panel [#23](https://github.com/carlosrenatohr/hit-panel/pull/23).
++- **Siguiente (plan completo en §7):** ejecutar el módulo Configuración (Orbit) — branding por agencia, tarifas, audit logs, rutas reales.
+ 
+ **Sesión 2026-07-11 — rebrand + auditoría de seguridad + pulido de landing.**
+ - **Rebrand completo a "Naranja HIT"** (`#FF7A00` protagonista + navy `#14213D` soporte + tipografía Montserrat/Poppins) en **sitio Y panel**, reemplazando el viejo rojo `#FF3B3F`/Inter. Fuente de verdad: brand book v1.0 en `hit-cargo-web-v-1.2/docs/marketing/brand-color-system.md`. Logos consolidados + optimizados (~370 KB menos), set idéntico en ambos repos.
+@@ -51,7 +58,7 @@ Todo cambio — humano o IA — pasa por esto. El gate no es negociable.
+ 2. **Planea** — para trabajo no trivial, un plan revisado antes de escribir.
+ 3. **Implementa** — commits pequeños y atómicos (una idea cada uno).
+ 4. **Verifica** — corre el gate local: **`pnpm check`**. Itera hasta verde. *Esto es lo que hace confiable el trabajo asistido por IA.*
+-   - Sitio: `vitest run && astro build`. · Worker: `vitest run && wrangler deploy --dry-run`. · Panel: `astro check` (solo typecheck — sin tests aún).
++   - Sitio: `vitest run && astro build`. · Worker: `vitest run && wrangler deploy --dry-run`. · Panel: `vitest run && astro check` (11 tests).
+ 5. **Revisa** — segunda pasada (persona o agente adversarial).
+ 6. **Entrega** — rama desde la default → push → PR → CI (`pnpm check`) verde + 1 review → merge → deploy.
+ 
+@@ -119,6 +126,28 @@ Nunca commitear `.dev.vars`, `.env`, ni `.insforge/project.json` (todos gitignor
+ 
+ ## 7. Hilos abiertos / próximas acciones
+ 
++**PRÓXIMO — Plan en ejecución: módulo Configuración (Orbit).** Demo para el cliente Orbit: logo propio por agencia, tarifas autogestionables por organización, rutas reales en el panel y audit logs. **Decisiones ya tomadas (no re-discutir):** audit → solo acciones relevantes de negocio/seguridad (humanas y system-generated), telemetría del scraper excluida, retención todo + cleanup manual sin cron (~27 MB/año); tarifas → quote de facturación **diferido** (`pricing_catalog` sigue como fallback global); abstracciones `StorageService` (panel) y `ConfigRepository` (worker) con InsForge como implementación actual; IDs internos nunca en URLs; org/rol siempre desde la sesión, nunca del payload.
++
++**Orden de ejecución (workflow estándar: `pnpm check` → dredd → PR → CI → merge → deploy → smoke):**
++
++1. **hit-ever2** — rama `feat/config-module` desde `feat/tracker-api`.
++2. Verificar head remoto antes de crear migración: `npx @insforge/cli db migrations list` (bumpear timestamp si el head avanzó).
++3. **Migración `2026081XXXXXXX_config-module.sql`** (aditiva, dueña de `feat/config-module`, aplicar con `db migrations up --all`):
++   - `agencies` (slug PK: `hit`, `suite`) + **`audit_logs`** (diseño ADR-011: `organization_id`, `actor_id`, `actor_email`, `actor_type`, `action`, `entity_type`, `entity_id`, `request_id`, `created_at` + `metadata jsonb` before/after) + RLS (staff SELECT).
++   - `rate_tables` + `rate_rows` por organización (reusa enum `billing_freight_type` AIR/MAR; `price`/`cost`; profit/margin **no stored** — se computan en Worker `domain/calc`).
++   - Aditivos: `billing_clients.default_rate_id`, `packages.rate_override_id/by/at`.
++   - **Retrofit de las 3 RPCs** (`set_manual_status`, `add_package_tag`, `add_package_note`): INSERT a `audit_logs` en la misma transacción (cierra backlog P1 #31).
++   - Seed tarifa "Regular" desde `pricing_catalog`.
++4. **Worker** — `src/modules/config/` clonando el shape de `modules/billing/` (domain/repo/service/routes/middleware), montado en `/api/config`:
++   - `GET /api/config/branding` (logo/agencia), CRUD `/api/config/rates*` (permisos `config:read/write`, `rates:read/write`), `GET /api/config/audit*` (`audit:read`). Matriz: admin/billing=write, staff=read, viewer=none.
++   - `pnpm check` verde → **aviso 1 para `dredd full`** (checkpoint con el orquestador).
++5. **Panel** — rama propia (p.ej. `feat/config-module`) desde `main`:
++   - `lib/router.ts` (History API) reemplaza `useState<View>` en `App.tsx` + `_redirects` con `/* /index.html 200` (cierra board #11).
++   - `lib/config.ts` (patrón `api()` de billing/customer) + vista **Configuración**: branding (upload logo directo del navegador → InsForge Storage, optimización client-side canvas ≤512px WebP/PNG ~50 KB, bucket RLS staff-write + public-read), tarifas (CRUD por agencia + asignación `default_rate_id` a cliente + display en paquete), audit (tabla read-only staff/admin).
++   - `Shell.tsx`: mapa estático `BRANDS` → branding dinámico desde `/api/config/branding`.
++   - `pnpm check` verde → **aviso 2 para `dredd full`**.
++6. **PRs** con body estándar (What / Why / How verified / Migration: `config-module.sql` + rama dueña / Secrets / Smoke). El panel consume el Worker **deployado** antes del preview; si el contrato del Worker cambia shape → `panel-needs-rebuild` y coordinar rebuild+redeploy del panel.
++
+ **Seguridad — de la auditoría 2026-07 (prioridad). Detalle en cada `security-audit-2026-07.md`:**
+ - [ ] **Rotar secretos.** Worker: `ADMIN_SECRET` (débil/corto) + InsForge/Upstash/OpenAI/Everest/GC vía `wrangler secret put`. Y el **token CF que se pegó en chat** (crear nuevo → actualizar el secret `CLOUDFLARE_API_TOKEN` en hit-panel+hit-ever → borrar el viejo). Tratar como comprometidos.
+ - [ ] Worker: rate-limit en `/admin/*` y `/hooks/*`; verificar DKIM/SPF en el handler `email()`; alerta si el rate-limiter falla abierto; fix de timezone (implica backfill).
+diff --git a/board.md b/board.md
+index f17d79f..e1c4fe4 100644
+--- a/board.md
++++ b/board.md
+@@ -48,6 +48,7 @@ dredd status                    # show state.md
+ | # | Task | Spec | Branch | Status | PR |
+ |---|---|---|---|---|---|
+ | 12 | Panel no carga pesos (clobber bug) | — | fix/worker-preserve-list-only-fields | ✅ Done | — |
++| 14 | Módulo Configuración (Orbit): branding por agencia + tarifas + audit logs + rutas reales | ONBOARDING.md §7 | feat/config-module (ever2) + feat/config-module (panel) | 🔜 Ready | — |
+ 
+ ## hit-panel (Dashboard)
+ 

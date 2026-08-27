@@ -1,7 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const EMAIL = process.env.E2E_EMAIL ?? "test@canica.local";
-const PASSWORD = process.env.E2E_PASSWORD ?? "test1234";
+const EMAIL = process.env.E2E_EMAIL!;
+const PASSWORD = process.env.E2E_PASSWORD!;
+
+if (!EMAIL || !PASSWORD) {
+  throw new Error("E2E_EMAIL and E2E_PASSWORD environment variables must be set");
+}
 
 async function loginIfNeeded(page: Page) {
   const needsLogin = await page
@@ -142,12 +146,23 @@ test.describe("Accessibility @accessibility", () => {
       { href: "/settings", label: "Configuración" },
     ];
 
+    // Get current path to know which link should have aria-current="page"
+    const currentPath = page.url().split("/").pop() || "dashboard";
+
     for (const link of navLinks) {
       const navLink = page.locator(`nav a[href="${link.href}"]`).first();
       await expect(navLink).toHaveCount(1);
       await navLink.focus();
       await expect(navLink).toBeFocused();
-      await expect(navLink).toHaveAttribute("aria-current", "page");
+
+      // Only the current page link should have aria-current="page"
+      const isCurrentPage = link.href.endsWith(currentPath) || (currentPath === "" && link.href === "/dashboard");
+      if (isCurrentPage) {
+        await expect(navLink).toHaveAttribute("aria-current", "page");
+      } else {
+        await expect(navLink).not.toHaveAttribute("aria-current", "page");
+      }
+
       await page.keyboard.press("Tab");
     }
   });

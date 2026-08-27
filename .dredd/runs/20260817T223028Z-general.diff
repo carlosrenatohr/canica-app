@@ -1,0 +1,34 @@
+diff --git a/.gitignore b/.gitignore
+index 01eef8d..e7a0648 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -18,6 +18,11 @@ ADMIN-CREDENTIALS.local.txt
+ 
+ # Claude Code worktrees / local
+ .claude/
++.agents/
++
++# Orbit promo video asset dir + skills lock (not part of the panel repo)
++orbit-hitcargo-video/
++skills-lock.json
+ 
+ 
+ # graphify knowledge-graph output — keep the portable artifacts (graph.json + report)
+diff --git a/src/components/Configuracion.tsx b/src/components/Configuracion.tsx
+index d2d63ef..1a2e2c9 100644
+--- a/src/components/Configuracion.tsx
++++ b/src/components/Configuracion.tsx
+@@ -87,10 +87,10 @@ function BrandingTab({ user, canWrite }: { user: SessionUser; canWrite: boolean
+     setLoading(true)
+     setError(null)
+     try {
++      // Branding is scoped server-side to the session agency — even admins only
++      // see their own. No client-side filter is needed.
+       const { agencies: rows } = await configApi.branding()
+-      // Each user sees only their own tenant's branding — agencies are distinct
+-      // brands. Admins see every agency (mini-gallery to compare logos).
+-      setAgencies(user.role === 'admin' ? rows : rows.filter((a) => a.slug === user.agency))
++      setAgencies(rows)
+     } catch (e) {
+       setError(e instanceof Error ? e.message : 'No se pudo cargar el branding.')
+     }

@@ -81,11 +81,11 @@ function actionVariant(action: string): "success" | "warning" | "danger" | "neut
 }
 
 function actionLabel(action: string) {
-  return ACTION_LABELS[action] ?? "Acción registrada";
+  return ACTION_LABELS[action] ?? "Acción desconocida";
 }
 
 function entityLabel(entity: string) {
-  return ENTITY_LABELS[entity] ?? "Entidad registrada";
+  return ENTITY_LABELS[entity] ?? "Entidad desconocida";
 }
 
 function formatDate(value: string) {
@@ -292,7 +292,7 @@ export default function AuditLogPage() {
       {loading ? (
         <div className="space-y-2" aria-busy="true">
           {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} className="h-16 w-full" />
+            <Skeleton key={index} className="h-[var(--space-16)] w-full" />
           ))}
         </div>
       ) : error ? (
@@ -338,7 +338,7 @@ export default function AuditLogPage() {
               <TableBody>
                 {filtered.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="whitespace-nowrap text-muted">
+                    <TableCell className="whitespace-nowrap text-muted" scope="row">
                       <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
                     </TableCell>
                     <TableCell>
@@ -367,7 +367,6 @@ export default function AuditLogPage() {
                     </TableCell>
                     <TableCell>
                       <div className="min-w-36 space-y-1">
-                        <span className="block text-small text-muted">Usuario no resuelto</span>
                         <code className="block break-all text-caption text-muted" title={log.actorId}>
                           {log.actorId}
                         </code>
@@ -383,9 +382,10 @@ export default function AuditLogPage() {
           </div>
 
           {/* Mobile: card-based layout */}
-          <div className="lg:hidden space-y-3" role="list" aria-label="Registros de auditoría">
+          <ul className="lg:hidden space-y-3" role="list" aria-label="Registros de auditoría">
             {filtered.map((log) => (
-              <Card key={log.id} variant="elevated" className="p-4" role="listitem">
+              <li key={log.id} role="listitem">
+                <Card variant="elevated" className="p-4">
                 <div className="flex items-start gap-3">
                   <time className="flex-shrink-0 whitespace-nowrap text-caption text-muted" dateTime={log.createdAt}>
                     {formatDate(log.createdAt)}
@@ -411,7 +411,6 @@ export default function AuditLogPage() {
                       </div>
                       <div>
                         <span className="text-muted">Actor</span>
-                        <div className="font-medium">Usuario no resuelto</div>
                         <code className="break-all text-muted" title={log.actorId}>{log.actorId}</code>
                       </div>
                     </div>
@@ -419,8 +418,9 @@ export default function AuditLogPage() {
                   </div>
                 </div>
               </Card>
+              </li>
             ))}
-          </div>
+          </ul>
           <Pagination
             current={page}
             total={total}
