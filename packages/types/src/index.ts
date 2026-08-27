@@ -138,6 +138,7 @@ export interface Attachment {
   organizationId: UUID;
   patientId?: UUID;
   consultationId?: UUID;
+  fileName: string;
   storage: AttachmentStorage;
   path: string;
   mimeType: string;

@@ -29,6 +29,13 @@
       "when": 1786209162757,
       "tag": "0003_tiny_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787810731598,
+      "tag": "0004_chemical_starbolt",
+      "breakpoints": true
     }
   ]
 }
