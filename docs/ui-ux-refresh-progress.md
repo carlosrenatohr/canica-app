@@ -215,18 +215,17 @@ and audit events.
 - `.specs/architecture.md`: added `packages/storage` to package list and table
 - `.specs/domain-model.md`: Attachment entity already references Supabase Storage
 - `.specs/security-hipaa.md`: Storage & files section already references Supabase Storage
-- **8.1** Create `packages/storage` abstraction (Supabase Storage client, upload, signed URL, delete, list, generateAttachmentPath) — 10 unit tests passing
+- **8.1** Create `packages/storage` abstraction — 10 unit tests passing
+- **8.2** Attachment repository in `packages/db` (`packages/db/src/repos/attachments.ts`, CRUD org-scoped, exported from index)
+- **8.3** API routes in `apps/api` (`POST /attachments`, `GET /patients/:id/attachments`, `GET /attachments/:id/signed-url`, `DELETE /attachments/:id`)
+- **8.4** Audit events wired: `attachment.upload`, `attachment.read`, `attachment.delete`
 
 ### In Progress
-- **8.2** Attachment repository in `packages/db` (CRUD, org-scoped)
+- **8.5** Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx`
 
 ### Planned
-- **8.2** Attachment repository in `packages/db` (CRUD, org-scoped)
-- **8.3** API routes in `apps/api` (POST /attachments upload, GET /attachments list, GET /attachments/:id signed URL, DELETE /attachments/:id)
-- **8.4** Audit events: `attachment.upload`, `attachment.read`, `attachment.delete`
-- **8.5** Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete)
 - **8.6** Update patient detail Documents tab to link to real route
-- **8.7** E2E tests for documents flow (upload, download, delete, permissions)
+- **8.7** E2E tests for documents flow
 
 ### Dependencies
 - Supabase project already configured (DB + Storage in same project)

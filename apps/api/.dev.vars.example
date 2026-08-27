@@ -1,0 +1,4 @@
+# Local development secrets for canica-api (gitignored).
+# Copy this file to .dev.vars and fill in real values.
+DATABASE_URL=postgres://user:pass@localhost:5432/canica
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
