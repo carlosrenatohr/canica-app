@@ -215,9 +215,10 @@ and audit events.
 - `.specs/architecture.md`: added `packages/storage` to package list and table
 - `.specs/domain-model.md`: Attachment entity already references Supabase Storage
 - `.specs/security-hipaa.md`: Storage & files section already references Supabase Storage
+- **8.1** Create `packages/storage` abstraction (Supabase Storage client, upload, signed URL, delete, list, generateAttachmentPath) — 10 unit tests passing
 
 ### In Progress
-- **8.1** Create `packages/storage` abstraction (Supabase Storage client, upload, signed URL, delete, list)
+- **8.2** Attachment repository in `packages/db` (CRUD, org-scoped)
 
 ### Planned
 - **8.2** Attachment repository in `packages/db` (CRUD, org-scoped)
