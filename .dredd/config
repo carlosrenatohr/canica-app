@@ -1,0 +1,5 @@
+# Dredd config — persistent settings
+# This file is sourced by the dredd wrapper before running.
+# Override with env vars: DREDD_AGENT_KIND=codex dredd review "..."
+
+DREDD_AGENT_KIND=hermes

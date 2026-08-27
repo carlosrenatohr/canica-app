@@ -1,0 +1,646 @@
+diff --git a/.dredd/README.md b/.dredd/README.md
+new file mode 100644
+index 0000000..dfc075b
+--- /dev/null
++++ b/.dredd/README.md
+@@ -0,0 +1,128 @@
++# Dredd
++
++> *"I am the law."* — Judge Dredd
++
++Dredd is the HIT Cargo workspace's **multi-agent code reviewer**. It lives in this directory and orchestrates Codex (or another agent) in a Herd split-pane to give a 2nd opinion on every change before it lands.
++
++## Who is Dredd
++
++Named after **Judge Dredd** (2000 AD comics / movie), the law-enforcing judge of Mega-City One. The metaphor fits the job:
++
++- **Dredd judges the diff.** No rubber-stamping — the reviewer returns a verdict (Alta / Media / Baja), with `file:line` evidence and a concrete fix for every finding.
++- **Dredd is the law.** Security is enforced by `dredd-sentinel` (the security-reviewer skill), the audit counterpart to `dredd-judge` (the reviewer skill). Same uncompromising standard, different domain.
++- **Dredd has no appeal.** Findings are severity-tagged, not negotiated. Alta is a blocker; Media is a fix-up; Baja is an ack.
++- **Dredd self-evaluates.** Every run ends with a self-evaluation that proposes a prompt improvement. The orchestrator can auto-append good ideas to `.dredd/improvements.md`; you curate; nothing auto-edits the skill.
++
++If we add more agents later, they fit the cast: `dredd-mediator` (perf), `dredd-warden` (a11y), `dredd-informant` (docs). Same pattern, different specialization.
++
++## CLI: `dredd` (at repo root)
++
++A thin wrapper around the recipes in this dir. Always run from the repo root.
++
++```bash
++dredd review "backlog-p4.md#spec-p4-05"     # dredd-judge (general)
++dredd security "backlog-p4.md#spec-p4-05"   # dredd-sentinel (security)
++dredd full "backlog-p4.md#spec-p4-05"       # both in parallel (2 Herd panes)
++dredd metrics                               # summary of past reviews
++dredd metrics --since=7d --by=week          # last 7 days, aggregated by week
++dredd metrics --append                      # also append a row to .dredd/metrics.md
++dredd state                                 # show .dredd/state.md
++dredd help                                  # this help
++```
++
++## Sub-agents (user-level skills)
++
++Both in `~/.config/opencode/skills/`, available to every project:
++
++- **`reviewer/SKILL.md`** → invoked as `dredd-judge`. Adversarial code review.
++- **`security-reviewer/SKILL.md`** → invoked as `dredd-sentinel`. Security audit against the HIT checklist (PII allowlist, RLS default-deny, secrets, CSP, SQL/RPCs, auth, headers, session locks).
++
++Both finish with a **self-evaluation** the orchestrator can use to sharpen the next run.
++
++## Recipe: `.dredd/review.sh`
++
++Spawns a reviewer in a Herd split-pane, sends the diff + spec, waits for `done`, prints the result.
++
++```bash
++.dredd/review.sh general  "backlog-p4.md#spec-p4-05"
++.dredd/review.sh security "backlog-p4.md#spec-p4-05"
++```
++
++The `dredd` wrapper is a friendlier front-end. Use it unless you need the raw recipe.
++
++Requirements:
++- `herdr 0.7+` (`brew install herdr` or check the install page)
++- `codex` CLI on PATH
++- run from inside a Herd pane (so the orchestrator's context is reachable)
++
++## Metrics: `dredd metrics`
++
++Reads `.dredd/logs/*.md` and produces a Markdown table of date / type / Alta / Media / Baja / Total. Pure bash + `grep` + `awk` — no MCP, no skill, no external API. The full historical log lives in `.dredd/metrics.md` (one row per `--append` call).
++
++If you want it fully wired up to an MCP later, the most natural fit would be `codebase-memory-mcp` to index `.dredd/logs/` and query patterns — but the bash parser is cheaper and the logs are small.
++
++## State: `dredd state`
++
++`.dredd/state.md` is the live tracker of the workspace's P4 work: in progress, done, queue, backlog file changes. The orchestrator updates it as tasks move. `dredd state` just prints it.
++
++## Auto-improve (opt-in)
++
++`review.sh` can auto-append a row to `.dredd/improvements.md` when the self-eval contains a meaningful "Suggested prompt improvement:". Default OFF. Enable per-run:
++
++```bash
++DREDD_AUTO_IMPROVE=1 dredd review "backlog-p4.md#spec-p4-05"
++```
++
++Threshold: suggestion must be non-empty, > 30 chars, and not literally "none" / "None.". You still curate `improvements.md` by hand and edit the skill file with a `chore(skills):` commit.
++
++## Workflow
++
++For every coding task:
++
++1. **Orchestrator (opencode) implements** — branch off default, edit, `pnpm check`, draft commit.
++2. **STOP for human approval** of the commit message.
++3. **Run reviews** (in parallel, in Herd panes):
++   ```bash
++   dredd full "backlog-p4.md#spec-p4-XX"
++   ```
++4. **Integrate findings** before commit:
++   - **Alta** → fix in this branch, re-run gate, re-review.
++   - **Media** → fix in this branch or in a follow-up before merge.
++   - **Baja** → ack-only; capture as a note in the PR.
++5. **Commit** the orchestrator's diff (not the review fixes; those are separate commits in the same branch).
++6. **Append self-eval to improvements** (if `DREDD_AUTO_IMPROVE=1`) or do it by hand.
++
++## Layout
++
++```
++.dredd/
++├── review.sh              # the recipe (tracked)
++├── metrics.sh             # metrics parser (tracked)
++├── README.md              # this file (tracked)
++├── state.md               # live work tracker (tracked)
++├── improvements.md        # curated prompt improvements (tracked, append-only)
++├── templates/
++│   └── review-prompt.md   # prompt template the recipe fills (tracked)
++├── logs/                  # per-run output (gitignored) — one file per review
++└── runs/                  # per-run state (gitignored) — diffs + raw agent transcripts
++dredd                     # wrapper CLI at repo root (tracked, executable)
++```
++
++## Self-improvement loop
++
++Dredd's judges and sentinel end every review with a **self-evaluation** that includes a *Suggested prompt improvement* line. Two ways to capture it:
++
++1. **Auto** (opt-in): `DREDD_AUTO_IMPROVE=1 dredd review ...` appends to `.dredd/improvements.md` if the suggestion meets the threshold.
++2. **Manual**: the orchestrator (you or the agent) reads the self-eval from `.dredd/logs/...` and appends the good ones.
++
++When you accept an improvement, you edit the skill file yourself (with a `chore(skills):` commit) so the change is reviewable in git. Nothing auto-edits the skill prompts. The human stays in the loop.
++
++## Reuse across projects
++
++Dredd works in any project:
++
++1. Copy `dredd` and `.dredd/` (excluding `logs/` and `runs/`) into the new project.
++2. The skills are user-level — already there.
++3. Adjust the `BASE` branch detection in `review.sh` if the project uses a different default branch.
++
++For non-HIT projects, edit `.dredd/templates/review-prompt.md` to point at the project-specific security checklist (the HIT checklist lives in the security-reviewer skill).
+diff --git a/.dredd/improvements.md b/.dredd/improvements.md
+new file mode 100644
+index 0000000..eb76ece
+--- /dev/null
++++ b/.dredd/improvements.md
+@@ -0,0 +1,8 @@
++# Prompt improvements (curated)
++
++Append-only log of prompt-improvement suggestions extracted from reviewer and security-reviewer self-evaluations. The orchestrator writes here; a human reads + applies.
++
++Format:
++- `YYYY-MM-DD — <skill> — <review-type>` — suggestion — applied? (yes/no)
++
++(Empty by design. The first entry is created after the first review run.)
+diff --git a/.dredd/metrics.sh b/.dredd/metrics.sh
+new file mode 100755
+index 0000000..f7917b2
+--- /dev/null
++++ b/.dredd/metrics.sh
+@@ -0,0 +1,148 @@
++#!/usr/bin/env bash
++# .dredd/metrics.sh — read .dredd/logs/*.md and produce a summary table.
++#
++# Usage:
++#   dredd metrics                       # last 30 days, all types
++#   dredd metrics --since=7d            # last 7 days
++#   dredd metrics --type=general        # only general reviews
++#   dredd metrics --by=week             # aggregate per ISO week
++#   dredd metrics --append              # also append a row to .dredd/metrics.md (historical log)
++#
++# Self-contained: pure bash + grep. No external deps beyond standard Unix tools.
++
++set -euo pipefail
++
++REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
++LOG_DIR="$REPO_ROOT/.dredd/logs"
++HIST_FILE="$REPO_ROOT/.dredd/metrics.md"
++
++# Defaults
++SINCE_DAYS=30
++FILTER_TYPE=""
++BY=""
++APPEND=0
++
++for arg in "$@"; do
++  case "$arg" in
++    --since=*) SINCE_DAYS="${arg#*=}" ;;
++    --type=*)  FILTER_TYPE="${arg#*=}" ;;
++    --by=*)    BY="${arg#*=}" ;;
++    --append)  APPEND=1 ;;
++    *) echo "Unknown arg: $arg" >&2; exit 2 ;;
++  esac
++done
++
++if [[ ! -d "$LOG_DIR" ]]; then
++  echo "No logs yet. Run 'dredd review' or 'dredd security' first." >&2
++  exit 0
++fi
++
++# Cutoff: N days ago (epoch seconds)
++if [[ "$SINCE_DAYS" =~ ^[0-9]+d$ ]]; then
++  DAYS="${SINCE_DAYS%d}"
++  CUTOFF_EPOCH=$(($(date +%s) - DAYS * 86400))
++else
++  CUTOFF_EPOCH=0
++fi
++
++# Read all log files, filter by date + type, parse counts.
++TMP="$(mktemp)"
++trap 'rm -f "$TMP"' EXIT
++
++for f in "$LOG_DIR"/*.md; do
++  [[ -f "$f" ]] || continue
++  base="$(basename "$f" .md)"  # e.g. 20260804T183000Z-general
++  ts="${base%%-*}"              # 20260804T183000Z
++  type="${base##*-}"            # general | security
++
++  # Date in YYYY-MM-DD from YYYYMMDD
++  date_part="${ts%%T*}"
++  y="${date_part:0:4}"; m="${date_part:4:2}"; d="${date_part:6:2}"
++  iso_date="$y-$m-$d"
++
++  # Filter by date
++  file_epoch=$(date -d "$iso_date" +%s 2>/dev/null || echo 0)
++  [[ "$file_epoch" -ge "$CUTOFF_EPOCH" ]] || continue
++
++  # Filter by type
++  [[ -n "$FILTER_TYPE" && "$type" != "$FILTER_TYPE" ]] && continue
++
++  # Count findings (lines starting with "**[" or "- **[")
++  alta=$(grep -cE '^\s*-\s*\*\*\[Alta\]\*\*' "$f" || true)
++  media=$(grep -cE '^\s*-\s*\*\*\[Media\]\*\*' "$f" || true)
++  baja=$(grep -cE '^\s*-\s*\*\*\[Baja\]\*\*' "$f" || true)
++  total=$((alta + media + baja))
++
++  echo -e "$iso_date\t$type\t$alta\t$media\t$baja\t$total" >> "$TMP"
++done
++
++if [[ ! -s "$TMP" ]]; then
++  echo "No reviews in the last ${SINCE_DAYS} (type=${FILTER_TYPE:-all})." >&2
++  exit 0
++fi
++
++# Print the table
++echo "| Date | Type | Alta | Media | Baja | Total |"
++echo "| --- | --- | --- | --- | --- | --- |"
++sort -t$'\t' -k1,1 "$TMP" | awk -F'\t' '{ printf "| %s | %s | %d | %d | %d | %d |\n", $1, $2, $3, $4, $5, $6 }'
++
++# Aggregate by week or by type
++if [[ -n "$BY" ]]; then
++  echo
++  echo "## Aggregated by $BY"
++  echo
++  case "$BY" in
++    week)
++      echo "| Week | Type | Alta | Media | Baja | Total |"
++      echo "| --- | --- | --- | --- | --- | --- |"
++      sort -t$'\t' -k1,1 "$TMP" | awk -F'\t' '{
++        cmd = "date -d " $1 " +%G-W%V"; cmd | getline wk; close(cmd)
++        key = wk SUBSEP $2
++        a[key]+=$3; m[key]+=$4; b[key]+=$5; t[key]+=$6
++      }
++      END {
++        for (k in a) {
++          split(k, parts, SUBSEP)
++          printf "| %s | %s | %d | %d | %d | %d |\n", parts[1], parts[2], a[k], m[k], b[k], t[k]
++        }
++      }' | sort
++      ;;
++    type)
++      echo "| Type | Alta | Media | Baja | Total |"
++      echo "| --- | --- | --- | --- | --- | --- |"
++      awk -F'\t' '{
++        a[$2]+=$3; m[$2]+=$4; b[$2]+=$5; t[$2]+=$6
++      }
++      END {
++        for (k in a) printf "| %s | %d | %d | %d | %d |\n", k, a[k], m[k], b[k], t[k]
++      }' "$TMP" | sort
++      ;;
++  esac
++fi
++
++# Totals
++echo
++total_alta=$(awk -F'\t' '{s+=$3} END {print s+0}' "$TMP")
++total_media=$(awk -F'\t' '{s+=$4} END {print s+0}' "$TMP")
++total_baja=$(awk -F'\t' '{s+=$5} END {print s+0}' "$TMP")
++total_all=$(awk -F'\t' '{s+=$6} END {print s+0}' "$TMP")
++echo "**Totals:** Alta=$total_alta, Media=$total_media, Baja=$total_baja, all=$total_all"
++
++# Optionally append a row to the historical log
++if [[ "$APPEND" -eq 1 ]]; then
++  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
++  mkdir -p "$(dirname "$HIST_FILE")"
++  if [[ ! -f "$HIST_FILE" ]]; then
++    {
++      echo "# Dredd historical metrics"
++      echo
++      echo "Auto-appended by \`dredd metrics --append\`. One row per invocation."
++      echo
++      echo "| Run | Since | Type filter | By | Alta | Media | Baja | Total |"
++      echo "| --- | --- | --- | --- | --- | --- | --- | --- |"
++    } > "$HIST_FILE"
++  fi
++  echo "| $ts | $SINCE_DAYS | ${FILTER_TYPE:-all} | ${BY:-none} | $total_alta | $total_media | $total_baja | $total_all |" >> "$HIST_FILE"
++  echo
++  echo "Appended to $HIST_FILE"
++fi
+diff --git a/.dredd/review.sh b/.dredd/review.sh
+new file mode 100755
+index 0000000..a5c8a14
+--- /dev/null
++++ b/.dredd/review.sh
+@@ -0,0 +1,123 @@
++#!/usr/bin/env bash
++# Dredd — Herd-orchestrated code reviewer.
++# Spawns a Codex reviewer in a split pane, sends the diff + spec,
++# waits for `done`, prints findings + self-evaluation.
++#
++# Usage:
++#   .dredd/review.sh general [spec-ref]     # adversarial code review
++#   .dredd/review.sh security [spec-ref]    # security audit
++#
++# spec-ref: optional path, URL, or anchor (e.g. "backlog-p4.md#spec-p4-05")
++#
++# Requires:
++#   - herdr 0.7+ (https://herdr.dev)
++#   - codex CLI on PATH (Codex is the default reviewer model)
++#   - run from a Herd pane (so the orchestrator is in a Herdr context)
++#
++# Self-evaluation: at the end, the reviewer's self-eval is appended to
++# .dredd/logs/YYYY-MM-DD-HHMM-<type>.md and to .dredd/runs/<id>/log.md.
++# The orchestrator reads that and proposes prompt improvements to
++# .dredd/improvements.md (human-curated).
++
++set -euo pipefail
++
++REVIEW_TYPE="${1:-}"
++SPEC_REF="${2:-}"
++REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
++
++# Pick skill + agent name by review type
++case "$REVIEW_TYPE" in
++  general)
++    SKILL_FILE="$HOME/.config/opencode/skills/reviewer/SKILL.md"
++    AGENT_NAME="dredd-judge"
++    MODEL="${DREDD_MODEL:-gpt-5.4}"
++    ;;
++  security)
++    SKILL_FILE="$HOME/.config/opencode/skills/security-reviewer/SKILL.md"
++    AGENT_NAME="dredd-sentinel"
++    MODEL="${DREDD_MODEL:-gpt-5.4}"
++    ;;
++  *)
++    echo "Usage: $0 [general|security] [spec-ref]" >&2
++    exit 2
++    ;;
++esac
++
++if [[ ! -f "$SKILL_FILE" ]]; then
++  echo "Skill file not found: $SKILL_FILE" >&2
++  exit 1
++fi
++
++# Save the diff to a file the reviewer can read
++TS="$(date -u +%Y%m%dT%H%M%SZ)"
++DIFF_FILE="$REPO_ROOT/.dredd/runs/${TS}-${REVIEW_TYPE}.diff"
++mkdir -p "$(dirname "$DIFF_FILE")"
++
++BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
++BASE="$(git -C "$REPO_ROOT" merge-base "$BRANCH" origin/main 2>/dev/null || git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null || echo HEAD)"
++if git -C "$REPO_ROOT" diff --quiet "$BASE"..."$BRANCH" 2>/dev/null; then
++  echo "No diff vs $BASE. Did you forget to commit?" >&2
++  exit 1
++fi
++git -C "$REPO_ROOT" diff "$BASE"..."$BRANCH" > "$DIFF_FILE"
++
++# Log file for self-evaluation capture
++LOG_FILE="$REPO_ROOT/.dredd/logs/${TS}-${REVIEW_TYPE}.md"
++mkdir -p "$(dirname "$LOG_FILE")"
++
++# 1. Split a pane to the right (no focus — orchestrator keeps working)
++SPLIT_JSON="$(herdr pane split --current --direction right --no-focus)"
++REVIEWER_PANE="$(printf '%s\n' "$SPLIT_JSON" | jq -r '.result.pane.pane_id')"
++
++# 2. Launch the reviewer in that pane
++herdr agent start "$AGENT_NAME" --kind codex --pane "$REVIEWER_PANE" -- -m "$MODEL"
++
++# 3. Build the prompt
++PROMPT="$(cat "$REPO_ROOT/.dredd/templates/review-prompt.md")"
++PROMPT="${PROMPT//\{\{REVIEW_TYPE\}\}/$REVIEW_TYPE}"
++PROMPT="${PROMPT//\{\{SKILL_FILE\}\}/$SKILL_FILE}"
++PROMPT="${PROMPT//\{\{DIFF_FILE\}\}/$DIFF_FILE}"
++PROMPT="${PROMPT//\{\{SPEC_REF\}\}/$SPEC_REF}"
++PROMPT="${PROMPT//\{\{REPO_ROOT\}\}/$REPO_ROOT}"
++
++# 4. Send and wait for done
++herdr agent prompt "$AGENT_NAME" "$PROMPT" --wait --until done --timeout 180000
++
++# 5. Read the result
++RESULT="$(herdr agent read "$AGENT_NAME" --source recent-unwrapped --lines 400)"
++
++# 6. Persist to log
++{
++  echo "# $REVIEW_TYPE review — $TS"
++  echo
++  echo "- repo: $REPO_ROOT"
++  echo "- branch: $BRANCH"
++  echo "- base: $BASE"
++  echo "- spec: $SPEC_REF"
++  echo "- diff: $DIFF_FILE"
++  echo
++  echo "## Findings + self-evaluation"
++  echo
++  printf '%s\n' "$RESULT"
++} > "$LOG_FILE"
++
++# 7. Print to stdout for the orchestrator
++printf '%s\n' "$RESULT"
++
++# 8. Auto-append to improvements.md (opt-in). Looks for "Suggested prompt improvement:" in the
++# self-eval section; if the suggestion is non-empty and > 30 chars, appends a row to
++# .dredd/improvements.md. Default OFF — set DREDD_AUTO_IMPROVE=1 to enable.
++if [[ "${DREDD_AUTO_IMPROVE:-0}" == "1" ]]; then
++  SUGGESTION="$(printf '%s\n' "$RESULT" \
++    | awk '/^### Self-evaluation/{flag=1; next} /^### /{flag=0} flag' \
++    | sed -n 's/^[[:space:]]*-\s*Suggested prompt improvement:[[:space:]]*//p' \
++    | head -1)"
++  if [[ -n "$SUGGESTION" && "${#SUGGESTION}" -gt 30 && "$SUGGESTION" != "none" && "$SUGGESTION" != "None." ]]; then
++    IMPROVE_FILE="$REPO_ROOT/.dredd/improvements.md"
++    DATE="$(date -u +%Y-%m-%d)"
++    SKILL_NAME="reviewer"
++    [[ "$REVIEW_TYPE" == "security" ]] && SKILL_NAME="security-reviewer"
++    printf '%s — %s — %s — %s — applied? no\n' \
++      "$DATE" "$SKILL_NAME" "$REVIEW_TYPE" "$SUGGESTION" >> "$IMPROVE_FILE"
++  fi
++fi
+diff --git a/.dredd/state.md b/.dredd/state.md
+new file mode 100644
+index 0000000..d6013af
+--- /dev/null
++++ b/.dredd/state.md
+@@ -0,0 +1,35 @@
++# Dredd state
++
++Live view of the workspace's P4 work. The orchestrator (opencode = the agent) updates this file as tasks move through the queue. Committed with each move (in the same branch as the code change, or as a standalone `chore(dredd): state` commit).
++
++## In progress
++
++(none right now)
++
++## Done
++
++- **P4-05 — Doble request al cargar lista de envíos (parpadeo)** — repo `hit-panel`, branch `fix/panel-shipments-double-load`, commit `f1a61bc`. Diagnosis: search-debounce effect unconditionally rewrote `filters` on mount, creating a new object that re-triggered the `listPackages` effect 350 ms later. Fix: idempotent setters + seed initial search. Gate: `astro check` 0/0. Not yet reviewed by Dredd (first Dredd commit landed after — see backlog below).
++- **Dredd setup (intro)** — repo workspace root, branch `feat/agent-orchestration`, commit `687b37c`. Adds `.dredd/review.sh`, "Who is Dredd" doc, section in `AGENTS.md`. No reviews run yet (Dredd can't review himself on day one).
++- **Dredd automation + metrics + state** — repo workspace root, branch `feat/agent-orchestration` (this commit). Adds `dredd` wrapper CLI, `.dredd/metrics.sh`, this state file, auto-improve hook in `review.sh`.
++
++## Backlog queue (from `backlog-p4.md`)
++
++In order of when we'll tackle them (easiest / clearest first per the audit in backlog-p4.md intro):
++
++1. **P4-12 — Panel no carga los pesos de Cargotrack** — bug, fix de mapping. ~80% claro. Repo `hit-panel`.
++2. **P4-01 — Banner de promoción del mes** — sitio, config-driven. ~70% claro. Repo `hit-cargo-web-v-1.2`.
++3. **P4-02 — Conectar con redes (social)** — sitio, footer. ~60% claro. Repo `hit-cargo-web-v-1.2`. *Bloqueado: faltan URLs oficiales.*
++4. **P4-10 — Auditoría de la landing con Kimi K3** — research, no code. ~70% claro. No sprint-able a producto.
++5. **P4-08 — Botón refresh + carga manual** — panel, refinamiento de P2. ~70% claro. Repo `hit-panel`. *Solapa con P2 (refresh now).*
++6. **P4-13 — Selección múltiple → batch de facturas** — panel, UI + RPC. ~65% claro. Repo `hit-panel`. *Depende de P2 audit log.*
++7. **P4-07 — Asignar clientes manual** — panel, modal + autocomplete. ~65% claro. Repo `hit-panel`. *Depende de P2 audit log.*
++8. **P4-03 — Analytics OJO** — sitio, GTM + GA4 + Meta. ~50% claro. Repo `hit-cargo-web-v-1.2`. *Solapa con P2 GTM triggers.*
++9. **P4-09 — Skeleton lib + new loading (midu)** — sitio/panel, refactor visual. ~50% claro. *Sin design tokens definidos.*
++10. **P4-04 — Ada auto (asistente AI)** — sitio, chatbot. ~40% claro. Decisiones de producto abiertas.
++11. **P4-11 — Panel navegable por página (no one-page)** — panel, reescritura. ~60% claro. 1-2 sprints.
++12. **P4-06 — Facturar / salida — alineación visual** — panel. **BLOQUEADO** por las fotos de referencia de Kevin.
++
++## Backlog file changes
++
++- `backlog.md` (workspace root) — modified by the user this session (+397 lines, added a P4 section summarizing the P4 specs in the main file). Untouched by Dredd; the user owns this.
++- `backlog-p4.md` (workspace root) — the source of truth for P4 specs. Dredd reformulated **SPEC-P4-05** to point at `hit-panel` instead of the site (per the user's correction), with full diagnosis + acceptance criteria adjusted to the panel context.
+diff --git a/.dredd/templates/review-prompt.md b/.dredd/templates/review-prompt.md
+new file mode 100644
+index 0000000..a6aff2b
+--- /dev/null
++++ b/.dredd/templates/review-prompt.md
+@@ -0,0 +1,25 @@
++You are Dredd, the code reviewer for the HIT Cargo workspace. Your job: judge whether this diff is ready to ship, risky, or wrong, and finish with a self-evaluation so the next invocation is sharper.
++
++# Review type
++{{REVIEW_TYPE}}
++
++# System prompt (your full job description)
++Read this first, then apply it: {{SKILL_FILE}}
++
++# Inputs
++- Repo: {{REPO_ROOT}}
++- Diff to review: {{DIFF_FILE}}
++- Spec reference: {{SPEC_REF}}
++
++# Process
++1. Read the system prompt file (the skill) end-to-end. It contains your checklist, output format, and hard rules.
++2. Read the diff file end-to-end. Form a hypothesis of what changed.
++3. Find and read the spec. If `{{SPEC_REF}}` is a path, read it. If it's an anchor like `backlog-p4.md#spec-p4-05`, read the file and jump to the section. If it's a URL, fetch it.
++4. Read `AGENTS.md` (workspace root) and the sub-repo `AGENTS.md` for project conventions.
++5. Walk the diff against every acceptance criterion. For each: ✅ / ❌ / ⚠ — one-line evidence.
++6. Look for regressions, edge cases, error paths, idempotence, tests, style.
++7. Return the findings in the exact Markdown format from the system prompt.
++8. End with the self-evaluation section (mandatory).
++
++# Output
++Strict Markdown. No preamble. Start with the first heading of the system prompt's output format. End with the self-evaluation. Do not include anything else.
+diff --git a/.gitignore b/.gitignore
+index a75d326..d98562d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -14,4 +14,8 @@ graphify-out/
+ # Misc
+ node_modules/
+ .DS_Store
+-*:Zone.Identifier
+\ No newline at end of file
++*:Zone.Identifier
++
++# Dredd-orchestrated review (per-run, ephemeral)
++.dredd/logs/
++.dredd/runs/
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+index 1b92d95..3974fff 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -590,4 +590,50 @@ Registro de problemas diagnosticados en `hit-ever2/docs/known-issues.md` — sí
+ 
+ ---
+ 
++# Agent Orchestration (Dredd + sub-agents)
++
++> **Dredd** es el revisor multi-agent del workspace. Ver `.dredd/README.md` §"Who is Dredd" para la historia del nombre.
++
++El orquestador (opencode) maneja las tareas de coding; los sub-agents dan una 2da opinión antes de cada commit, lanzados como Codex en un split-pane de Herd. El orquestador (vos o el agent) lee los findings y decide qué actuar.
++
++## Sub-agents (user-level, `~/.config/opencode/skills/`)
++
++- **`reviewer`** → invocado por Dredd como `dredd-judge`. Code review adversarial. Lee diff + spec, devuelve coverage de acceptance criteria + findings Alta/Media/Baja + self-evaluation.
++- **`security-reviewer`** → invocado por Dredd como `dredd-sentinel`. Auditoría de seguridad. Mismo shape, audita contra el checklist HIT (PII allowlist, RLS default-deny, secrets, CSP, SQL/RPCs, auth, headers, session locks).
++
++Ambos terminan con un **self-evaluation** que el orquestador usa para afilar la próxima corrida.
++
++## Recipe: `.dredd/review.sh` + `dredd` wrapper
++
++Lanza un reviewer Codex en un split-pane de Herd, manda el diff + spec, espera `done`, imprime el resultado. El wrapper `dredd` (en la raíz del repo) es el front-end amigable:
++
++```bash
++dredd review "backlog-p4.md#spec-p4-05"     # dredd-judge (general)
++dredd security "backlog-p4.md#spec-p4-05"   # dredd-sentinel (security)
++dredd full "backlog-p4.md#spec-p4-05"       # ambos en paralelo (2 panes)
++dredd metrics                               # resumen de reviews pasadas
++dredd state                                 # .dredd/state.md (trabajo en curso)
++```
++
++Requisitos: `herdr 0.7+`, `codex` CLI, correr desde un pane de Herd. Detalles, "Who is Dredd", self-improvement loop, auto-improve y reuse en `.dredd/README.md`.
++
++## State tracking
++
++`.dredd/state.md` (tracked) es el live tracker del trabajo P4: in-progress, done, queue, cambios en backlogs. El orquestador lo actualiza al mover tasks. `dredd state` lo imprime.
++
++## Workflow por task
++
++1. Orquestador implementa — branch off default, edit, `pnpm check`, draft commit.
++2. **STOP** para que vos apruebes el mensaje.
++3. Reviews en paralelo (panes de Herd):
++   ```bash
++   .dredd/review.sh general  "backlog-p4.md#spec-p4-XX"
++   .dredd/review.sh security "backlog-p4.md#spec-p4-XX"
++   ```
++4. Integrar findings **antes** de commitear: Alta → fix en esta rama, re-gate, re-review. Media → fix o follow-up antes de merge. Baja → ack-only.
++5. Commit (los fixes de review son commits separados en la misma rama).
++6. El orquestador lee el self-eval de cada log y propone mejoras a `.dredd/improvements.md` (vos curás; nada auto-edita el skill).
++
++---
++
+ *Para cambios a este archivo: commit en el repo al que afecte, o un repo "meta" del workspace. Mantener cifras que caducan fuera de acá — apuntar al runbook/query. Histórico de consolidación en `AGENTS_AUDIT.md`.*
+\ No newline at end of file
+diff --git a/dredd b/dredd
+new file mode 100755
+index 0000000..23755ef
+--- /dev/null
++++ b/dredd
+@@ -0,0 +1,65 @@
++#!/usr/bin/env bash
++# dredd — wrapper CLI for the Dredd multi-agent reviewer.
++#
++# Subcommands:
++#   dredd review [spec-ref]       run dredd-judge (general code review)
++#   dredd security [spec-ref]     run dredd-sentinel (security audit)
++#   dredd full [spec-ref]         run both in parallel (2 Herd panes)
++#   dredd metrics [args]          show summary of past reviews (see .dredd/metrics.sh)
++#   dredd state                   show .dredd/state.md
++#   dredd help                    this help
++
++set -euo pipefail
++
++REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
++DREDD_DIR="$REPO_ROOT/.dredd"
++
++cmd="${1:-help}"
++shift || true
++
++case "$cmd" in
++  review)
++    exec bash "$DREDD_DIR/review.sh" general "$@"
++    ;;
++  security)
++    exec bash "$DREDD_DIR/review.sh" security "$@"
++    ;;
++  full)
++    # Both reviews in parallel. Each one splits its own pane.
++    bash "$DREDD_DIR/review.sh" general  "$@" > "/tmp/dredd-general-$$.log"  2>&1 &
++    PID1=$!
++    bash "$DREDD_DIR/review.sh" security "$@" > "/tmp/dredd-security-$$.log" 2>&1 &
++    PID2=$!
++    wait "$PID1"; RC1=$?
++    wait "$PID2"; RC2=$?
++    echo "===== dredd-judge (general) ====="
++    cat "/tmp/dredd-general-$$.log"
++    echo
++    echo "===== dredd-sentinel (security) ====="
++    cat "/tmp/dredd-security-$$.log"
++    rm -f "/tmp/dredd-general-$$.log" "/tmp/dredd-security-$$.log"
++    if [[ $RC1 -ne 0 || $RC2 -ne 0 ]]; then
++      echo "One or more reviews failed (general=$RC1, security=$RC2)." >&2
++      exit 1
++    fi
++    ;;
++  metrics)
++    exec bash "$DREDD_DIR/metrics.sh" "$@"
++    ;;
++  state)
++    if [[ -f "$DREDD_DIR/state.md" ]]; then
++      cat "$DREDD_DIR/state.md"
++    else
++      echo "No .dredd/state.md yet." >&2
++      exit 1
++    fi
++    ;;
++  help|--help|-h)
++    sed -n '2,12p' "$0" | sed 's/^# //;s/^#//'
++    ;;
++  *)
++    echo "Unknown command: $cmd" >&2
++    echo "Try 'dredd help'." >&2
++    exit 2
++    ;;
++esac

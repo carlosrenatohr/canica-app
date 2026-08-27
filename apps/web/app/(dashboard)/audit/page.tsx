@@ -81,11 +81,11 @@ function actionVariant(action: string): "success" | "warning" | "danger" | "neut
 }
 
 function actionLabel(action: string) {
-  return ACTION_LABELS[action] ?? "Acción registrada";
+  return ACTION_LABELS[action] ?? "Acción desconocida";
 }
 
 function entityLabel(entity: string) {
-  return ENTITY_LABELS[entity] ?? "Entidad registrada";
+  return ENTITY_LABELS[entity] ?? "Entidad desconocida";
 }
 
 function formatDate(value: string) {
@@ -292,7 +292,7 @@ export default function AuditLogPage() {
       {loading ? (
         <div className="space-y-2" aria-busy="true">
           {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} className="h-16 w-full" />
+            <Skeleton key={index} className="h-[var(--space-16)] w-full" />
           ))}
         </div>
       ) : error ? (
@@ -324,7 +324,7 @@ export default function AuditLogPage() {
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border">
+          <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border hidden lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -338,7 +338,7 @@ export default function AuditLogPage() {
               <TableBody>
                 {filtered.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="whitespace-nowrap text-muted">
+                    <TableCell className="whitespace-nowrap text-muted" scope="row">
                       <time dateTime={log.createdAt}>{formatDate(log.createdAt)}</time>
                     </TableCell>
                     <TableCell>
@@ -367,7 +367,6 @@ export default function AuditLogPage() {
                     </TableCell>
                     <TableCell>
                       <div className="min-w-36 space-y-1">
-                        <span className="block text-small text-muted">Usuario no resuelto</span>
                         <code className="block break-all text-caption text-muted" title={log.actorId}>
                           {log.actorId}
                         </code>
@@ -381,6 +380,47 @@ export default function AuditLogPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile: card-based layout */}
+          <ul className="lg:hidden space-y-3" role="list" aria-label="Registros de auditoría">
+            {filtered.map((log) => (
+              <li key={log.id} role="listitem">
+                <Card variant="elevated" className="p-4">
+                <div className="flex items-start gap-3">
+                  <time className="flex-shrink-0 whitespace-nowrap text-caption text-muted" dateTime={log.createdAt}>
+                    {formatDate(log.createdAt)}
+                  </time>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={actionVariant(log.action)} className="gap-1.5">
+                        {actionIcons[log.action] ?? <Shield className="h-4 w-4" aria-hidden="true" />}
+                        {actionLabel(log.action)}
+                      </Badge>
+                      {!ACTION_LABELS[log.action] && (
+                        <code className="text-caption text-muted">{log.action}</code>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-caption">
+                      <div>
+                        <span className="text-muted">Entidad</span>
+                        <div className="font-medium">{entityLabel(log.targetEntity)}</div>
+                        {!ENTITY_LABELS[log.targetEntity] && (
+                          <code className="text-muted">{log.targetEntity}</code>
+                        )}
+                        {log.targetId && <code className="break-all text-muted" title={log.targetId}>{log.targetId}</code>}
+                      </div>
+                      <div>
+                        <span className="text-muted">Actor</span>
+                        <code className="break-all text-muted" title={log.actorId}>{log.actorId}</code>
+                      </div>
+                    </div>
+                    <div className="text-muted break-words">{log.summary || "Sin resumen disponible"}</div>
+                  </div>
+                </div>
+              </Card>
+              </li>
+            ))}
+          </ul>
           <Pagination
             current={page}
             total={total}

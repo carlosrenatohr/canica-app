@@ -4,6 +4,8 @@ Kanban del workspace canica. **Single source of truth** para tracking de tareas,
 y research. El estado vivo por milestone vive en [`docs/progress.md`](./docs/progress.md); este
 board es el plan de trabajo (incluye investigación y no-código).
 
+**UI/UX Refresh (2026-08-10):** el estado detallado de las fases del refresh vive en [`docs/ui-ux-refresh-progress.md`](./docs/ui-ux-refresh-progress.md). El plan aprobado está en [`docs/audits/2026-08-10-ui-ux/`](./docs/audits/2026-08-10-ui-ux/).
+
 ## How to add a new task
 
 ```markdown
@@ -34,7 +36,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 03 | M14 Appointments CRUD (repo + API + UI) | `.specs/domain-model.md` | — | ✅ Done | #11 |
 | 04 | M15 PDF export consulta + audit + botón UI | `.specs/domain-model.md` | — | ✅ Done | #12 |
 | 05 | M16 Audit log query + UI `/audit` | `.specs/security-hipaa.md` | — | ✅ Done | #13 |
-| 06 | Design system: aplicación de tema (paleta navy/emerald/sky, Geist, dark mode, `packages/ui`) — cerrar scope M10 | `.specs/design-system.md` | — | ✅ Done | — |
+| 06 | Design system: aplicación de tema (Canica Clinical palette, Geist, dark mode, `packages/ui`) — ver UI/UX Refresh abajo | `.specs/design-system.md` | — | ✅ Done | — |
 | 07 | Attachments (Phase 1): upload/list/download + Supabase Storage + UI | `.specs/domain-model.md` | — | 📋 Backlog | — |
 | 08 | M15 completion: export de prescripción + persistir `document_exports` + listado descargable | `.specs/domain-model.md` | — | 📋 Backlog | — |
 | 09 | M14 leftovers: reminders (stub email) + link cita → consulta | `.specs/roadmap.md` (Phase 3) | — | 📋 Backlog | — |
@@ -55,8 +57,8 @@ board es el plan de trabajo (incluye investigación y no-código).
 | W2 | Consolidar `AGENTS.md` estilo hit: canónico, tool-neutral (consolida CLAUDE/ONBOARDING/README/docs) + `AGENTS_AUDIT.md` (histórico de consolidación) + `ONBOARDING.md` (handoff de sesión) | `~/Codee/hit/AGENTS.md` · `AGENTS_AUDIT.md` · `ONBOARDING.md` | — | 📋 Backlog | — |
 | W3 | Gate estandarizado de verificación tipo hit (`pnpm check` como único gate: typecheck + lint + test + e2e) + `skills-lock.json` (skills pinned con hash) | `~/Codee/hit/skills-lock.json` · AGENTS.md hit (gate) | — | 📋 Backlog | — |
 | W4 | Integrar Dredd con board/state de canica (`dredd board`/`status`/`metrics`) y definir el flujo standard completo (spec → task → review → merge) | `~/Codee/hit/.dredd/README.md` | — | 📋 Backlog | — |
-| W5 | Asegurar Cloudflare MCP + codebase-memory MCP instalados y usados de forma canónica (codebase-memory por encima de grep/glob del agente). Cloudflare MCP hoy NO está en `opencode.json` (solo hay skills); documentar y habilitar | `~/.config/opencode/opencode.json` · `AGENTS.md` (MCP tooling) | — | 📋 Backlog | — |
-| W6 | Indexar canica-app en codebase-memory (`index_repository`) para que código + `.specs/` sean consultables vía grafo; evaluar definir `.specs/` como fuente de verdad consultable | `index_repository` · `AGENTS.md` (MCP tooling) | — | 📋 Backlog | — |
+| W5 | Asegurar Cloudflare MCP + codebase-memory MCP instalados y usados de forma canónica (codebase-memory por encima de grep/glob del agente). Cloudflare MCP hoy NO está en `opencode.json` (solo hay skills); documentar y habilitar | `~/.config/opencode/opencode.json` · `AGENTS.md` (MCP tooling) | — | 🔄 In Progress (codebase-memory ✅, Cloudflare pendiente) | — |
+| W6 | Indexar canica-app en codebase-memory (`index_repository`) para que código + `.specs/` sean consultables vía grafo; evaluar definir `.specs/` como fuente de verdad consultable | `index_repository` · `AGENTS.md` (MCP tooling) | — | ✅ Done (6946 nodos, 21438 edges, indexado) | — |
 
 ## Design & Growth
 
@@ -75,24 +77,36 @@ board es el plan de trabajo (incluye investigación y no-código).
 | Q5 | Remove `ORG_ID` fallback (API ya no lo lee; limpiar `.env` + docs) | `docs/how-to/development.md` | — | 📋 Backlog | — |
 | Q6 | Lint `@canica/api` y `@canica/config`: script falla ("all files ignored") — decidir config por paquete o dropear | `docs/backlog.md` | — | 📋 Backlog | — |
 
+## UI/UX Refresh (audit 2026-08-10)
+
+> Plan aprobado: [`docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md`](./docs/audits/2026-08-10-ui-ux/260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md)  
+> Tracker vivo: [`docs/ui-ux-refresh-progress.md`](./docs/ui-ux-refresh-progress.md)
+
+| Phase | Scope | Status | Verification |
+|---|---|---|---|
+| 0 | Baseline, SDD envelope, spec alignment | ✅ Verified | spec aprobado, baseline typecheck/build/e2e |
+| 1 | Canica Clinical tokens + dark mode | ✅ Verified | `globals.css`, light/dark, focus tokens |
+| 2 | P0 functional stabilization | ✅ Verified | `/dashboard` canónico, hooks fix, session timeout, títulos acentuados |
+| 3 | Shared UI primitives + state compositions | ✅ Verified | `packages/ui` (16 componentes), PatientForm, FormField |
+| 4 | Navigation + application chrome | ✅ Verified | sidebar responsive, topbar sticky, theme toggle, `/settings` |
+| 5 | Forms + patient workflows | ✅ Verified | PatientForm compartido, FormField, validación accesible |
+| 6 | Dashboard, lists, clinical detail, audit | ✅ Verified | summary endpoint, paginación, search, actor resolution, appointment detail |
+| 7 | Settings + account experience | ✅ Verified | `/settings`, theme persistence, profile/session |
+| 8 | Patient documents + storage | ⏸️ Blocked | requiere contract gate (Supabase Storage, signed URLs, audit events) |
+| 9 | Responsive + accessibility hardening | 🔄 In Progress | touch targets, contrast, aria-live, keyboard nav (commits `b1d6c4e`–`4ad42fd`) |
+| 10 | Visual polish + regression closure | 📋 Backlog | visual snapshots light/dark, spacing, animation polish |
+
+**Verification status (2026-08-25):** `pnpm typecheck` ✅ · `pnpm test` 19/19 ✅ · `pnpm build` ✅ (19 rutas) · `pnpm e2e` 7/15 passed (8 failed por API apagada en :3001, 8 skipped)
+
 ---
 
-## Notas / pendientes documentados hoy (2026-08-05)
+## Notas / pendientes documentados hoy (2026-08-25)
 
-- **CSS no cargaba** → faltaba `apps/web/postcss.config.mjs` (Tailwind v4 requiere el plugin
-  `@tailwindcss/postcss`). Arreglado + commit `14d18d1`.
-- **Signup roto x2**: (1) `organizationId` anidado en `additionalFields` → Better Auth lo
-  espera top-level (`400 MISSING_FIELD`); (2) rewrite de Next quitaba el prefijo `/api` →
-  `/api/auth/*` daba `404` en la API. Arreglado + commit `9ef1a2e`.
-- **API debe correr en `PORT=3001`** para el proxy del web; el default (`3000`) choca con
-  Next. Documentado en `docs/how-to/development.md`.
-- **Playwright MCP roto** por channel `chrome` (ver Q1) — el browser del MCP no lanza.
-- **Cuenta dev creada para pruebas**: `doctor.demo@example.com` / `Demo12345!` (rol doctor,
-  org `00000000-0000-0000-0000-000000000000`).
-- **Documentación de hoy**: `docs/progress.md`, `docs/development-plan.md`, `docs/backlog.md`,
-  `README.md` actualizados con M12–M16 y gaps; commit `8d3b8fb`.
-- **Workflow & Standards (sección nueva)**: replicar Dredd + AGENTS.md consolidado + gate de
-  verificación + skills-lock desde `~/Codee/hit` (W1–W4) como standard de trabajo uniforme.
-- **MCP canónico documentado** en `AGENTS.md` de canica: codebase-memory MCP como primera
-  opción para discovery de código, Cloudflare MCP cuando esté configurado (W5), Playwright MCP
-  para verificación en browser.
+- **UI/UX Refresh Phases 0–7 verificadas** — ver sección arriba y tracker detallado en `docs/ui-ux-refresh-progress.md`.
+- **Audit files movidos** a `docs/audits/2026-08-10-ui-ux/` (260810_CANICA_REFRESH_UIUX.md + 260810_CANICA_UI_UX_AUDIT_AND_ACTION_PLAN.md).
+- **codebase-memory index actualizado** — 6946 nodos, 21438 edges, SHA `4ad42fd` (HEAD). Regla añadida a `AGENTS.md`: codebase-memory es el first source of truth para code discovery.
+- **AGENTS.md actualizado** con 3 nuevas reglas: (1) codebase-memory mandatory first, (2) verification gate antes de cada task, (3) progress update obligatorio post-task.
+- **E2E status**: 7 smoke tests pasan (anónimos), 8 authenticated tests fallan por API apagada (`ECONNREFUSED :3001`), 8 no corren. Necesita API corriendo para cobertura completa.
+- **Phase 8 (Documents) bloqueada** — requiere decisión de storage + spec gate antes de implementar.
+- **Lint Q6** sigue abierto — `@canica/api` y `@canica/config` fallan por "all files ignored".
+- **Playwright MCP Q1** sigue roto — Chrome binary no encontrado en `/opt/google/chrome/chrome`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { apiFetch } from "@/lib/api";
 import {
   Button,
@@ -30,6 +30,7 @@ interface Patient {
 }
 
 const PAGE_SIZE = 20;
+const DEBOUNCE_MS = 300;
 
 export default function PatientsPage() {
   const router = useRouter();
@@ -40,14 +41,33 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [debouncedFilter, setDebouncedFilter] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useSafePageTitle("Pacientes");
+
+  const handleFilterChange = useCallback((value: string) => {
+    setFilter(value);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setDebouncedFilter(value);
+      setPage(1);
+    }, DEBOUNCE_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!session) return;
     setLoading(true);
     const offset = (page - 1) * PAGE_SIZE;
-    apiFetch(`/api/patients?limit=${PAGE_SIZE}&offset=${offset}`)
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
+    if (debouncedFilter) params.set("search", debouncedFilter);
+    apiFetch(`/api/patients?${params}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -61,7 +81,7 @@ export default function PatientsPage() {
         setError(err.message);
         setLoading(false);
       });
-  }, [session, page]);
+  }, [session, page, debouncedFilter]);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Archivar a ${name}?`)) return;
@@ -80,10 +100,6 @@ export default function PatientsPage() {
     );
   }
 
-  const filtered = patients.filter((p) =>
-    `${p.firstName} ${p.lastName}`.toLowerCase().includes(filter.toLowerCase()),
-  );
-
   return (
     <main className="space-y-6">
       <div className="flex items-center justify-between">
@@ -96,7 +112,7 @@ export default function PatientsPage() {
       <Input
         placeholder="Buscar paciente…"
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(e) => handleFilterChange(e.target.value)}
         className="max-w-md"
         aria-label="Filtrar pacientes por nombre"
       />
@@ -116,25 +132,25 @@ export default function PatientsPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : filtered.length === 0 ? (
+      ) : patients.length === 0 ? (
         <EmptyState
-          title={patients.length === 0 ? "Sin pacientes" : "Sin resultados"}
+          title={debouncedFilter ? "Sin resultados" : "Sin pacientes"}
           description={
-            patients.length === 0
-              ? "Aún no tenés pacientes registrados."
-              : "No se encontraron pacientes con ese nombre."
+            debouncedFilter
+              ? "No se encontraron pacientes con ese nombre."
+              : "Aún no tenés pacientes registrados."
           }
-          actionLabel={patients.length === 0 ? "Agregar paciente" : undefined}
+          actionLabel={debouncedFilter ? undefined : "Agregar paciente"}
           onAction={
-            patients.length === 0
-              ? () => router.push("/patients/new")
-              : undefined
+            debouncedFilter
+              ? undefined
+              : () => router.push("/patients/new")
           }
         />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p) => (
+            {patients.map((p) => (
             <Card
               key={p.id}
               variant="interactive"

@@ -235,7 +235,7 @@ export default function DashboardPage() {
       </header>
 
       {statCards.length > 0 ? (
-        <section aria-labelledby="summary-title" className="space-y-4">
+        <section aria-labelledby="summary-title" aria-live="polite" className="space-y-4">
           <div>
             <h2 id="summary-title" className="text-h3 font-semibold text-text">
               Situación actual
