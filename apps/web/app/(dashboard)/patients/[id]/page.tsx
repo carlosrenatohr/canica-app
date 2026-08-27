@@ -141,6 +141,12 @@ export default function PatientDetailPage({
       icon: FileText,
       path: `/patients/${patient.id}/consultations`,
     },
+    {
+      id: "documents",
+      label: "Documentos",
+      icon: FileText,
+      path: `/patients/${patient.id}/documents`,
+    },
   ];
   const activeTab = tabs.find((t) => pathname === t.path)?.id ?? "summary";
 

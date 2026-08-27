@@ -10,9 +10,11 @@
   },
   "vars": {
     "API_BASE_URL": "https://canica-api.nativerse.workers.dev",
-    "TRUSTED_ORIGINS": "https://canica.nativerse.workers.dev,http://localhost:3000,http://localhost:3001"
+    "TRUSTED_ORIGINS": "https://canica.nativerse.workers.dev,http://localhost:3000,http://localhost:3001",
+    "SUPABASE_URL": "https://supabase.nativerse.dev",
+    "STORAGE_BUCKET": "attachments"
   },
   "secrets": {
-    "required": ["DATABASE_URL"]
+    "required": ["DATABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
   }
 }

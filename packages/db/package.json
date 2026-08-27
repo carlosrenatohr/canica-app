@@ -11,6 +11,7 @@
     "./repos/medical-records": "./src/repos/medical-records.ts",
     "./repos/appointments": "./src/repos/appointments.ts",
     "./repos/document-exports": "./src/repos/document-exports.ts",
+    "./repos/attachments": "./src/repos/attachments.ts",
     "./repos/permissions": "./src/repos/permissions.ts",
     "./repos/audit": "./src/repos/audit.ts",
     "./*": "./src/*"

@@ -6,3 +6,4 @@ export * from "./repos/consultations";
 export * from "./repos/medical-records";
 export * from "./repos/appointments";
 export * from "./repos/document-exports";
+export * from "./repos/attachments";
