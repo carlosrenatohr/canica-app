@@ -71,7 +71,7 @@ risk: high
 | 5 | Forms and patient workflows | verified | parallel agent C | Phase 3 |
 | 6 | Dashboard, lists, clinical detail, audit | verified | primary/agent C | Phases 2–5 |
 | 7 | Settings and account experience | verified | parallel agent B | Phase 4 |
-| 8 | Patient documents and storage | blocked until contract gate | specialist agent | security/domain/storage review |
+| 8 | Patient documents and storage | in-progress | specialist agent | security/domain/storage review |
 | 9 | Responsive and accessibility hardening | in-progress | QA agent | Phases 3–8 |
 | 10 | Visual polish and regression closure | planned | primary + reviewer | all prior phases |
 
@@ -204,6 +204,37 @@ Decision: do not create a Documents UI against fake local state. The specialist 
 first update the domain/security/API/storage contract, then implement the UI against the
 real contract with organization scoping, permission checks, signed access, validation,
 and audit events.
+
+## Phase 8 Progress — Documents (Supabase Storage) — 2026-08-26
+
+> Storage decision: **Supabase Storage** (same project as DB, BAA available, fits tech-stack).  
+> Specs updated: `.specs/architecture.md` (+`packages/storage`), `.specs/domain-model.md` (Attachment refs), `.specs/security-hipaa.md` (Storage section).
+
+### Completed
+- Storage decision documented and specs updated
+- `.specs/architecture.md`: added `packages/storage` to package list and table
+- `.specs/domain-model.md`: Attachment entity already references Supabase Storage
+- `.specs/security-hipaa.md`: Storage & files section already references Supabase Storage
+
+### In Progress
+- **8.1** Create `packages/storage` abstraction (Supabase Storage client, upload, signed URL, delete, list)
+
+### Planned
+- **8.2** Attachment repository in `packages/db` (CRUD, org-scoped)
+- **8.3** API routes in `apps/api` (POST /attachments upload, GET /attachments list, GET /attachments/:id signed URL, DELETE /attachments/:id)
+- **8.4** Audit events: `attachment.upload`, `attachment.read`, `attachment.delete`
+- **8.5** Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete)
+- **8.6** Update patient detail Documents tab to link to real route
+- **8.7** E2E tests for documents flow (upload, download, delete, permissions)
+
+### Dependencies
+- Supabase project already configured (DB + Storage in same project)
+- `attachment:read` / `attachment:write` permissions already seeded
+- `packages/validation` already has `CreateAttachmentInput`
+
+### Verification
+- Typecheck, test, build must pass after each unit
+- E2E tests require authenticated session + API running
 
 ## Next Work Units
 
