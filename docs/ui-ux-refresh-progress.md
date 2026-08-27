@@ -161,6 +161,18 @@ risk: high
   - Reduced motion preference respected (transitionDuration near-zero)
   - Touch targets minimum 44px verification
 
+### Dredd Review (2026-08-26) — Findings Addressed
+- **globals.css**: removed duplicate `@media (prefers-color-scheme: dark)` block; rely on `.dark` class only (Alta)
+- **audit/page.tsx**: 
+  - actor display: replaced "Usuario no resuelto" with opaque actorId (Alta)
+  - desktop table: added `scope="row"` to Fecha cell for proper semantics (Alta)
+  - mobile layout: changed from `div` to `<ul role="list">` + `<li role="listitem">` (Media)
+  - unknown action/entity: mapped to Spanish labels "Acción desconocida" / "Entidad desconocida" (Media)
+  - Skeleton height: replaced magic `h-16` with `var(--space-16)` token (Media)
+- **accessibility.spec.ts**:
+  - removed hardcoded credential defaults; require `E2E_EMAIL`/`E2E_PASSWORD` env vars (Media)
+  - fixed `aria-current="page"` assertion to only check active route link (Alta)
+
 ### Verification
 - `pnpm typecheck` ✅
 - `pnpm test` (validation 17/17, web 2/2) ✅
