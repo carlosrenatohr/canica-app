@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  ConfirmDialog,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
@@ -181,6 +182,7 @@ export default function PatientDocumentsPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Attachment | null>(null);
 
   useSafePageTitle("Documentos");
 
@@ -217,15 +219,20 @@ export default function PatientDocumentsPage({
     }
   };
 
-  const remove = async (attachment: Attachment) => {
-    if (!confirm(`¿Eliminar "${attachment.path}"?`)) return;
-    const res = await apiFetch(`/api/attachments/${attachment.id}`, {
+  const remove = (attachment: Attachment) => {
+    setDeleteTarget(attachment);
+  };
+
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const res = await apiFetch(`/api/attachments/${deleteTarget.id}`, {
       method: "DELETE",
       credentials: "include",
     });
     if (res.ok) {
-      setAttachments((prev) => prev.filter((a) => a.id !== attachment.id));
+      setAttachments((prev) => prev.filter((a) => a.id !== deleteTarget.id));
     }
+    setDeleteTarget(null);
   };
 
   if (!session) {
@@ -334,7 +341,7 @@ export default function PatientDocumentsPage({
                               variant="ghost"
                               size="sm"
                               onClick={() => download(a)}
-                              aria-label={`Descargar ${a.path}`}
+                              aria-label={`Descargar ${a.fileName}`}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -342,7 +349,7 @@ export default function PatientDocumentsPage({
                               variant="ghost"
                               size="sm"
                               onClick={() => remove(a)}
-                              aria-label={`Eliminar ${a.path}`}
+                              aria-label={`Eliminar ${a.fileName}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -362,6 +369,22 @@ export default function PatientDocumentsPage({
           open={uploadOpen}
           onOpenChange={setUploadOpen}
           onUploaded={fetchAttachments}
+        />
+
+        <ConfirmDialog
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          title="Eliminar documento"
+          description={
+            deleteTarget
+              ? `¿Seguro que deseas eliminar "${deleteTarget.fileName}"? Esta acción no se puede deshacer.`
+              : undefined
+          }
+          confirmLabel="Eliminar"
+          destructive
+          onConfirm={confirmRemove}
         />
       </div>
     </main>

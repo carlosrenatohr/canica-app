@@ -9,6 +9,7 @@ import {
   CardTitle,
   CardDescription,
   Skeleton,
+  ConfirmDialog,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
@@ -69,6 +70,7 @@ export default function PatientDetailPage({
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   useSafePageTitle("Paciente");
 
@@ -301,18 +303,23 @@ export default function PatientDetailPage({
           <Button onClick={() => router.push(`/patients/${patient.id}/edit`)}>
             Editar paciente
           </Button>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              if (!confirm("¿Archivar este paciente?")) return;
+          <Button variant="outline" onClick={() => setArchiveOpen(true)}>
+            Archivar
+          </Button>
+          <ConfirmDialog
+            open={archiveOpen}
+            onOpenChange={setArchiveOpen}
+            title="Archivar paciente"
+            description="¿Seguro que deseas archivar este paciente? Se ocultará de la lista activa."
+            confirmLabel="Archivar"
+            destructive
+            onConfirm={async () => {
               const res = await apiFetch(`/api/patients/${patient.id}`, {
                 method: "DELETE",
               });
               if (res.ok) router.push("/patients");
             }}
-          >
-            Archivar
-          </Button>
+          />
         </div>
       </div>
     </main>

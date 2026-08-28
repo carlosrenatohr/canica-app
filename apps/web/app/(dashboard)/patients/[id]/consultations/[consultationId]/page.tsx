@@ -107,6 +107,7 @@ export default function ConsultationDetailPage({
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   useSafePageTitle("Consulta");
 
@@ -203,9 +204,10 @@ export default function ConsultationDetailPage({
                 },
               );
               if (!res.ok) {
-                alert("Error generando PDF");
+                setPdfError("Error generando PDF. Inténtalo de nuevo.");
                 return;
               }
+              setPdfError(null);
               const blob = await res.blob();
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement("a");
@@ -228,6 +230,11 @@ export default function ConsultationDetailPage({
             Volver
           </Button>
         </div>
+        {pdfError ? (
+          <p role="alert" className="mt-2 text-small text-danger">
+            {pdfError}
+          </p>
+        ) : null}
       </div>
 
       {/* Progressive disclosure: queja → historia → examen → evaluación → plan (DS insight: ClyHealth) */}

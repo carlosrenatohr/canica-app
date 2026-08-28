@@ -92,11 +92,11 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 5 | Forms + patient workflows | ✅ Verified | PatientForm compartido, FormField, validación accesible |
 | 6 | Dashboard, lists, clinical detail, audit | ✅ Verified | summary endpoint, paginación, search, actor resolution, appointment detail |
 | 7 | Settings + account experience | ✅ Verified | `/settings`, theme persistence, profile/session |
-| 8 | Patient documents + storage | 🔄 In Progress | storage ✅ repo ✅ API ✅ audit ✅ UI ✅; 8.7 E2E in progress |
-| 9 | Responsive + accessibility hardening | 🔄 In Progress | touch targets, contrast, aria-live, keyboard nav (commits `b1d6c4e`–`4ad42fd`) |
-| 10 | Visual polish + regression closure | 📋 Backlog | visual snapshots light/dark, spacing, animation polish |
+| 8 | Patient documents + storage | ✅ Done | storage ✅ repo ✅ API ✅ audit ✅ UI ✅; 8.7 E2E ✅ (#30) |
+| 9 | Responsive + accessibility hardening | ✅ Done | cards en lists/tabla, reduced-motion + contraste en `globals.css`, focus tokens; nativos `confirm()`/`alert()` reemplazados por `ConfirmDialog` accesible (Radix) en pacientes/documentos/consultas |
+| 10 | Visual polish + regression closure | 🔄 In Progress | drift de color crudo inexistente (grep limpio); `visual-regression.spec.ts` agregado (snapshots `/login` en anchos/temas aprobados); baseline pendiente de generar con navegador |
 
-**Verification status (2026-08-26):** `pnpm typecheck` ✅ · `pnpm test` 19/19 ✅ · `pnpm build` ✅ (19 rutas) · `pnpm e2e` 7/15 passed (8 failed por API apagada en :3001, 8 skipped)
+**Verification status (2026-08-28):** `pnpm typecheck` ✅ 11/11 · `pnpm test` ✅ (api 32 / db 3 / storage 10 / web 2) · `pnpm build` ✅ (20 rutas) · E2E 8.7 + visual-regression escritos (corren con API/:3000 + navegador)
 
 ## Phase 8 — Documents (Supabase Storage)
 
@@ -111,7 +111,7 @@ board es el plan de trabajo (incluye investigación y no-código).
 | 8.4 | Audit events: `attachment.upload`, `attachment.read`, `attachment.delete` | `.specs/security-hipaa.md` | — | ✅ Done | — |
 | 8.5 | Documents UI: `apps/web/app/(dashboard)/patients/[id]/documents/page.tsx` (list, upload, download, delete) | `.specs/domain-model.md` | — | ✅ Done | #29 |
 | 8.6 | Update patient detail Documents tab to link to real route | `.specs/domain-model.md` | — | ✅ Done | #29 |
-| 8.7 | E2E tests for documents flow (upload, download, delete, permissions) | `.specs/agent-automation.md` | — | 🔄 In Progress | — |
+| 8.7 | E2E tests for documents flow (upload, download, delete, permissions) | `.specs/agent-automation.md` | — | ✅ Done | #30 |
 
 ---
 

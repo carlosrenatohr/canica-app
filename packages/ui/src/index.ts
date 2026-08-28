@@ -5,6 +5,7 @@ export * from "./components/button";
 export * from "./components/badge";
 export * from "./components/card";
 export * from "./components/dialog";
+export * from "./components/confirm-dialog";
 export * from "./components/table";
 export * from "./components/tabs";
 export * from "./components/breadcrumb";
