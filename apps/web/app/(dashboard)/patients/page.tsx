@@ -13,6 +13,7 @@ import {
   Skeleton,
   EmptyState,
   Pagination,
+  ConfirmDialog,
 } from "@canica/ui";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -83,13 +84,20 @@ export default function PatientsPage() {
       });
   }, [session, page, debouncedFilter]);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Archivar a ${name}?`)) return;
-    const res = await apiFetch(`/api/patients/${id}`, { method: "DELETE" });
+  const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const confirmArchive = async () => {
+    if (!archiveTarget) return;
+    const res = await apiFetch(`/api/patients/${archiveTarget.id}`, { method: "DELETE" });
     if (res.ok) {
-      setPatients((prev) => prev.filter((p) => p.id !== id));
+      setPatients((prev) => prev.filter((p) => p.id !== archiveTarget.id));
       setTotal((prev) => prev - 1);
     }
+    setArchiveTarget(null);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    setArchiveTarget({ id, name });
   };
 
   if (!session) {
@@ -196,6 +204,22 @@ export default function PatientsPage() {
           />
         </>
       )}
+
+      <ConfirmDialog
+        open={archiveTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setArchiveTarget(null);
+        }}
+        title="Archivar paciente"
+        description={
+          archiveTarget
+            ? `¿Seguro que deseas archivar a ${archiveTarget.name}? Se ocultará de la lista activa.`
+            : undefined
+        }
+        confirmLabel="Archivar"
+        destructive
+        onConfirm={confirmArchive}
+      />
     </main>
   );
 }

@@ -185,6 +185,16 @@ risk: high
 - Dialog focus trap verification on all dialogs (patient archive, session timeout, appointment actions)
 - ARIA landmarks audit (role="main", role="navigation", role="search", etc.)
 
+### Closed (2026-08-28) — Native dialogs replaced
+- Added accessible `ConfirmDialog` (`packages/ui/src/components/confirm-dialog.tsx`) on Radix `Dialog` (focus trap, aria, Escape, return focus).
+- Replaced all native `confirm()`/`alert()` calls (audit finding "Native alert()/confirm() flows"):
+  - `patients/[id]/page.tsx` — archivar paciente
+  - `patients/page.tsx` — archivar en lista
+  - `patients/[id]/documents/page.tsx` — eliminar documento
+  - `patients/[id]/consultations/[consultationId]/page.tsx` — `alert()` de PDF reemplazado por `role="alert"` inline
+- No raw Tailwind color drift found (`grep` limpio) — token system consistente.
+- Phase 9 status: **Done**.
+
 ## Documents Contract Assessment
 
 The current repository has the first domain pieces but not a runnable Documents
@@ -226,6 +236,9 @@ and audit events.
 ### In Progress
 - **8.7** E2E tests for documents flow (`apps/web/e2e/documents.spec.ts`): upload, list, download (signed URL popup), delete. Requires API running + Supabase env.
 
+### Completed (2026-08-28)
+- **8.7** E2E documents spec written (`apps/web/e2e/documents.spec.ts`); `fileName` hardening merged in PR #30. Phase 8 **Done**.
+
 ### Dependencies
 - Supabase project already configured (DB + Storage in same project)
 - `attachment:read` / `attachment:write` permissions already seeded
@@ -234,6 +247,21 @@ and audit events.
 ### Verification
 - Typecheck, test, build must pass after each unit
 - E2E tests require authenticated session + API running
+
+## Phase 10 Progress — Visual polish + regression closure (2026-08-28)
+
+### Completed
+- **Color/typography drift audit**: no raw Tailwind palette classes (`text-red-500`, `bg-blue-600`, etc.) in `apps/web` — semantic token system (`text-muted`, `text-danger`, `bg-surface`, ...) used consistently. Drift item **clean**.
+- **Reduced motion + contrast**: verified in `apps/web/app/globals.css` (lines 171–194) and `:focus-visible` ring tokens.
+- **Visual regression spec added** (`apps/web/e2e/visual-regression.spec.ts`): snapshots `/login` at approved widths (1440 / 1024 / 768 / 390 / 320) × themes (light/dark) via `toHaveScreenshot`. Baseline images generated on first `playwright test --update-snapshots` run (needs Playwright browser).
+- **Verification gate green**: `pnpm typecheck` 11/11 · `pnpm test` (api 32 / db 3 / storage 10 / web 2) · `pnpm --filter @canica/web build` ✅ (20 routes).
+
+### In Progress
+- Generate visual snapshot baselines (requires Playwright browser; config `webServer: pnpm dev` on :3000 already wired).
+- Confirm no unnecessary animation (reduced-motion present; no blocking findings).
+
+### Notes
+- Phase 10 largely pre-satisfied by Phases 1–7 token work; concrete remaining action = baseline snapshots + final regression run.
 
 ## Next Work Units
 
